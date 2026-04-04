@@ -2641,6 +2641,17 @@
        - openCart() shows simple alert list (you can build full page later)
        ------------------------- */
 
+    // Keep a clean root URL for B2C page on production domains.
+    (function normalizeB2CUrl() {
+      try {
+        const path = (window.location.pathname || '').toLowerCase();
+        if (path.endsWith('/index.html') || path.endsWith('/index.htm')) {
+          const cleanUrl = window.location.origin + '/' + (window.location.search || '') + (window.location.hash || '');
+          window.history.replaceState(null, '', cleanUrl);
+        }
+      } catch (e) {}
+    })();
+
     // sample subitem data for groups
     const CATALOG = {
       all_fresh: [
