@@ -1,0 +1,4598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Grozo Business (B2B)</title>
+	<link rel="icon" href="G11.ico" type="image/x-icon" />
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
+	<script>
+		window.SharedLoginModalConfig = {
+			rightTitle: 'We\'ll be available soon..',
+			rightSubtitle: 'with Grozo App',
+			onLoginSuccess: function () {
+				if (typeof refreshUserIcon === 'function') refreshUserIcon();
+				if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+				if (typeof refreshB2BStatusNotifications === 'function') refreshB2BStatusNotifications();
+				if (typeof openAccountPanel === 'function') openAccountPanel();
+			}
+		};
+	</script>
+	<script src="shared-login-modal.js" defer></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+	<style>
+		* { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins",sans-serif; }
+		body { background:#f8fafc; color:#111827; }
+		#recaptcha-container { display:none; }
+		.page-wrapper { width:100%; max-width:100%; margin:0 auto; padding:16px; }
+		.sticky-top { position:sticky; top:0; z-index:10; background:#f8fafc; }
+		header { display:flex; align-items:center; justify-content:space-between; padding:10px 0 18px; gap:8px; }
+		.logo { font-size:28px; font-weight:700; letter-spacing:1px; }
+		#grozoLogo { height:45px; display:block; }
+		.location-select { font-size:13px; background:#e5e7eb; padding:6px 10px; border-radius:999px; border:1px solid #d1d5db; cursor:pointer; }
+		.header-right { display:flex; align-items:center; gap:12px; font-size:13px; }
+		.cart-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:none; border:1px solid transparent; cursor:pointer; border-radius:8px; position:relative; }
+		.cart-btn img { width:20px; height:20px; display:inline-block; }
+		.cart-badge { position:absolute; top:-8px; right:-8px; background:#ef4444; color:white; border-radius:50%; padding:2px 6px; font-size:12px; font-weight:600; min-width:18px; text-align:center; }
+		.icon-circle { width:25px; height:25px; border-radius:50%; border:1px solid #d1d5db; display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer; }
+		.icon-circle img { width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
+		.icon-hidden { display:none; }
+
+		.b2b-toggle-wrap { display:flex; align-items:center; gap:8px; margin-right:2px; }
+		.b2b-toggle-label { font-size:12px; font-weight:600; color:#111827; }
+		.b2b-switch { position:relative; width:42px; height:24px; display:inline-block; }
+		.b2b-switch input { opacity:0; width:0; height:0; }
+		.b2b-slider { position:absolute; inset:0; background:#22c55e; border-radius:999px; cursor:pointer; transition:all 0.2s ease; }
+		.b2b-slider::before { content:''; position:absolute; width:18px; height:18px; left:21px; top:3px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:all 0.2s ease; }
+		.b2b-switch input:not(:checked) + .b2b-slider { background:#d1d5db; }
+		.b2b-switch input:not(:checked) + .b2b-slider::before { left:3px; }
+
+		.search-section { margin:4px 0 14px; position:relative; }
+		.search-container { position:relative; width:100%; }
+		.search-bar { display:flex; align-items:center; background:#fff; border-radius:999px; overflow:hidden; border:1px solid #d1d5db; position:relative; }
+		.search-bar input { flex:1; padding:10px 16px; border:none; outline:none; font-size:14px; }
+		.search-bar button { border:none; padding:10px 22px; font-size:14px; font-weight:500; cursor:pointer; background:#22c55e; color:white; }
+		.search-suggestions { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-top:none; border-radius:0 0 12px 12px; max-height:260px; overflow-y:auto; display:none; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+		.search-suggestions.active { display:block; }
+		.suggestion-item { padding:12px 16px; cursor:pointer; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:10px; transition:background 0.2s; }
+		.suggestion-item:hover { background:#f8fafc; }
+		.suggestion-item img { width:40px; height:40px; border-radius:6px; object-fit:cover; }
+		.suggestion-item-name { font-weight:600; font-size:13px; }
+		.suggestion-item-price { font-size:12px; color:#666; }
+
+		.tagline { margin:10px 2px 18px; font-size:18px; font-weight:500; }
+		.tagline span { color:#16a34a; font-weight:600; }
+
+		.rotating-banners { position:relative; border-radius:16px; overflow:hidden; margin-bottom:20px; }
+		.ad-banner-track {
+			display: flex;
+			width: 100%;
+			transition: transform 0.9s ease;
+			will-change: transform;
+		}
+		.ad-banner-slide {
+			flex: 0 0 100%;
+			width: 100%;
+		}
+		.ad-banner-slide img { width:100%; display:block; border-radius:16px; }
+		.ad-banner-nav {
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 34px;
+			height: 34px;
+			border: none;
+			border-radius: 50%;
+			background: rgba(17, 24, 39, 0.7);
+			color: #fff;
+			font-size: 20px;
+			line-height: 1;
+			cursor: pointer;
+			z-index: 4;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.ad-banner-nav.prev { left: 8px; }
+		.ad-banner-nav.next { right: 8px; }
+		.ad-banner-nav:hover { background: rgba(17, 24, 39, 0.85); }
+		.ad-dots { position:absolute; left:50%; transform:translateX(-50%); bottom:10px; display:flex; gap:6px; }
+		.ad-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.6); border:none; cursor:pointer; }
+		.ad-dot.active { background:#ffffff; }
+
+		.business-icons {
+			margin: 4px 0 22px;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+			gap: 12px;
+		}
+		.business-icon-wrap {
+			text-align: center;
+		}
+		.business-icon-item {
+			background: #ffffff;
+			border: 1px solid #e5e7eb;
+			border-radius: 12px;
+			padding: 10px 8px;
+		}
+		.business-icon-item img {
+			width: 78px;
+			height: 78px;
+			object-fit: contain;
+			display: block;
+			margin: 0 auto;
+		}
+		.business-icon-name {
+			margin-top: 8px;
+			font-size: 13px;
+			font-weight: 600;
+			color: #1f2937;
+			line-height: 1.3;
+		}
+
+		.tabs,
+		.product-tabs {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 14px;
+			margin: 0 0 14px;
+			padding: 0;
+			height: 56px;
+			font-size: 14px;
+			position: relative;
+			overflow: visible;
+		}
+		.tab,
+		.product-tab {
+			padding: 0 12px;
+			cursor: pointer;
+			border: none;
+			border-bottom: 3px solid transparent;
+			background: transparent;
+			transition: all 0.3s ease;
+			color: #6b7280;
+			font-weight: 600;
+			position: relative;
+			z-index: 2;
+			line-height: 56px;
+		}
+		.tab.active,
+		.product-tab.active {
+			color: #16a34a;
+			border-bottom-color: transparent;
+		}
+		.tab:hover,
+		.product-tab:hover {
+			color: #15803d;
+		}
+		.tabs-curve-svg {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 1;
+		}
+		.tabs-curve-path {
+			stroke: url(#b2bTabCurveGradient);
+			fill: none;
+			stroke-width: 1.5;
+			stroke-linecap: round;
+		}
+
+		.section-title { margin:16px 2px 10px; font-size:16px; font-weight:600; }
+		.card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+		.card { position:relative; background:#fff; border-radius:12px; padding:12px; border:1px solid #e5e7eb; text-align:center; }
+		.card img { width:120px; height:90px; object-fit:cover; border-radius:10px; margin-bottom:8px; cursor:pointer; }
+		.card-name { font-size:14px; font-weight:600; margin-bottom:6px; }
+		.card-price-wrap { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:3px; }
+		.card-price-discounted { font-size:14px; color:#16a34a; font-weight:700; }
+		.card-price-actual { font-size:12px; color:#6b7280; text-decoration:line-through; }
+		.card-off { font-size:12px; color:#ef4444; font-weight:700; }
+		.card-actions { margin-top: 8px; width: 100%; display: flex; justify-content: center; }
+		.add-btn {
+			padding: 6px 20px;
+			background: linear-gradient(135deg, #22c55e, #16a34a);
+			color: #fff;
+			border: none;
+			border-radius: 999px;
+			font-size: 12px;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.qty-section { display: none; width: 100%; }
+		.qty-box { display:flex; justify-content:center; align-items:center; gap:6px; margin-bottom:6px; }
+		.qty-btn {
+			width: 24px;
+			height: 24px;
+			border: 1px solid #d1d5db;
+			background: #fff;
+			border-radius: 6px;
+			font-size: 14px;
+			cursor: pointer;
+		}
+		.qty-number { min-width: 24px; text-align:center; font-weight: 600; }
+		.add-to-cart-btn {
+			width: 100%;
+			padding: 7px 0;
+			border: none;
+			border-radius: 999px;
+			background: #22c55e;
+			color: #fff;
+			font-size: 12px;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.off-badge {
+			position: absolute;
+			top: 8px;
+			left: 8px;
+			background: #dc2626;
+			color: #fff;
+			font-size: 11px;
+			font-weight: 700;
+			padding: 3px 7px;
+			border-radius: 999px;
+		}
+		.no-results { display:none; margin-top:8px; color:#6b7280; font-size:13px; }
+
+		.cart-page-backdrop {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.45);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			z-index: 140;
+			padding: 20px;
+		}
+		.cart-page-backdrop.active { display: flex; }
+		.cart-page {
+			width: 100%;
+			max-width: 900px;
+			max-height: 90vh;
+			background: #fff;
+			border-radius: 12px;
+			overflow: auto;
+			padding: 18px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+		}
+		.cart-page.empty-cart-mode {
+			display: block;
+			min-height: 460px;
+			overflow: hidden;
+		}
+		.cart-page.empty-cart-mode .cart-summary {
+			display: none;
+		}
+		.cart-page.empty-cart-mode .cart-items {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 340px;
+		}
+		.empty-cart-wrap {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 14px;
+			width: 100%;
+			min-height: 300px;
+		}
+		.empty-cart-image {
+			width: 180px;
+			max-width: 60vw;
+			height: auto;
+			display: block;
+		}
+		.empty-cart-continue-btn {
+			border: none;
+			background: #22c55e;
+			color: #fff;
+			padding: 10px 18px;
+			border-radius: 10px;
+			font-size: 14px;
+			font-weight: 700;
+			cursor: pointer;
+		}
+		.cart-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 12px;
+		}
+		.cart-title { margin: 0; }
+		.cart-close-btn {
+			background: #f3f4f6;
+			border: none;
+			padding: 8px 12px;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+		.cart-items { display:flex; flex-direction:column; gap:12px; }
+		.cart-item {
+			display: flex;
+			gap: 12px;
+			align-items: center;
+			border: 1px solid #f1f5f9;
+			padding: 10px;
+			border-radius: 8px;
+		}
+		.cart-item img { width:72px; height:72px; object-fit:cover; border-radius:8px; }
+		.cart-item-details { flex: 1; }
+		.cart-item-controls { display:flex; gap:8px; align-items:center; }
+		.cart-item-controls button {
+			border: 1px solid #d1d5db;
+			background: #fff;
+			padding: 6px 10px;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+		.cart-summary {
+			margin-top: 12px;
+			border-top: 1px solid #f1f5f9;
+			padding-top: 12px;
+			font-size: 14px;
+		}
+		.cart-summary-row {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 6px;
+		}
+		.cart-summary-row.total {
+			font-weight: 700;
+			font-size: 18px;
+			margin-top: 8px;
+		}
+		.cart-place-order-btn {
+			margin-top: 14px;
+			width: 100%;
+			padding: 12px;
+			border: none;
+			border-radius: 10px;
+			font-size: 14px;
+			font-weight: 700;
+			cursor: pointer;
+			background: #22c55e;
+			color: #fff;
+		}
+		.cart-place-order-btn:disabled {
+			opacity: 0.7;
+			cursor: not-allowed;
+		}
+
+		.b2b-popup-backdrop {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.5);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			z-index: 120;
+			padding: 16px;
+		}
+		.b2b-popup-backdrop.active { display: flex; }
+		.b2b-popup {
+			width: 100%;
+			max-width: 420px;
+			background: #fff;
+			border-radius: 14px;
+			padding: 20px;
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+		}
+		.b2b-popup-title {
+			font-size: 20px;
+			font-weight: 700;
+			margin-bottom: 8px;
+			color: #111827;
+		}
+		.b2b-popup-message {
+			font-size: 14px;
+			color: #374151;
+			margin-bottom: 16px;
+		}
+		.b2b-popup-actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+		}
+		.b2b-btn {
+			border: none;
+			border-radius: 8px;
+			padding: 9px 14px;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.b2b-btn-switch-off { background: #22c55e; color: #fff; }
+		.b2b-btn-cancel { background: #e5e7eb; color: #111827; }
+
+		.b2b-tracking-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:148; padding:16px; }
+		.b2b-tracking-backdrop.active { display:flex; }
+		.b2b-tracking-modal { width:100%; max-width:880px; max-height:90vh; overflow:auto; background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.28); padding:20px; position:relative; }
+		.b2b-tracking-close { position:absolute; top:10px; right:10px; border:none; background:#f3f4f6; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:18px; }
+		.b2b-tracking-title { font-size:22px; font-weight:700; margin-bottom:12px; color:#111827; }
+		.b2b-tracking-empty { border:1px solid #e5e7eb; border-radius:12px; padding:20px; text-align:center; color:#4b5563; }
+		.b2b-tracking-list { display:grid; gap:12px; }
+		.b2b-tracking-card { border:1px solid #e5e7eb; border-radius:12px; padding:14px; }
+		.b2b-tracking-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+		.b2b-order-tabs { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:12px; border-bottom:1px solid #e5e7eb; }
+		.b2b-order-tab { border:none; background:#f3f4f6; color:#4b5563; border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+		.b2b-order-tab.active { background:#22c55e; color:#fff; }
+		.b2b-tracking-order-id { font-size:15px; font-weight:700; color:#111827; }
+		.b2b-tracking-meta { font-size:13px; color:#6b7280; }
+		.b2b-status-pill { padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; background:#eef2ff; color:#1e3a8a; }
+		.b2b-track-btn { border:none; background:#22c55e; color:#fff; border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; }
+		.b2b-back-btn { border:none; background:#e5e7eb; color:#111; border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:10px; }
+		.b2b-timeline { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 14px; }
+		.b2b-step { min-width:110px; border:1px solid #e5e7eb; border-radius:10px; padding:8px; font-size:12px; color:#6b7280; text-align:center; }
+		.b2b-step.done { border-color:#16a34a; color:#16a34a; background:#f0fdf4; }
+		.b2b-step.active { border-color:#f59e0b; color:#92400e; background:#fffbeb; }
+		.b2b-track-details { border:1px solid #e5e7eb; border-radius:12px; padding:12px; display:grid; gap:8px; }
+		.b2b-track-detail-row { display:flex; justify-content:space-between; gap:10px; font-size:13px; }
+		.b2b-track-detail-row .label { font-weight:600; color:#111827; }
+		.b2b-track-detail-row .value { color:#4b5563; text-align:right; }
+		.b2b-map-wrap { margin-top:12px; border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#f8fafc; }
+		#b2bTrackingMap { width:100%; height:280px; border-radius:8px; border:1px solid #d1d5db; }
+		.b2b-live-note { font-size:12px; color:#6b7280; margin-top:8px; }
+
+		.location-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:130; padding:16px; }
+		.location-modal-backdrop.active { display:flex; }
+		.location-modal { width:100%; max-width:600px; background:#fff; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
+		.location-modal-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+		.location-modal-subtitle { font-size:13px; color:#666; margin-bottom:20px; }
+		.location-section { margin-bottom:20px; }
+		.location-section-title { font-size:14px; font-weight:600; margin-bottom:12px; color:#111; }
+		.location-section-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+		.location-reset-btn { background:#fff; color:#ef4444; border:1px solid #ef4444; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+		.geolocation-box { border:2px solid #e5e7eb; border-radius:12px; padding:16px; text-align:center; background:#f9fafb; }
+		.geolocation-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+		.geolocation-btn { background:#22c55e; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+		.geolocation-btn.manual-location-btn { background:#fff; color:#16a34a; border:1px solid #22c55e; }
+		#mapContainer { display:none; width:100%; height:320px; border-radius:12px; margin-top:12px; border:2px solid #e5e7eb; overflow:hidden; position:relative; }
+		#mapContainer.active { display:block; }
+		#mapContainer::after {
+			content: '📍';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -100%);
+			font-size: 34px;
+			z-index: 1000;
+			pointer-events: none;
+		}
+		.form-group { margin-bottom:16px; }
+		.form-group label { display:block; font-size:12px; font-weight:600; margin-bottom:6px; color:#111; }
+		.form-group input, .form-group select { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; }
+		.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+		.form-row-full { grid-column:1/-1; }
+		.saved-locations-list { display:grid; gap:10px; margin-bottom:16px; }
+		#savedLocationsSection { display: none; }
+		.saved-locations-map-container { margin-top:16px; border-radius:10px; overflow:hidden; }
+		.saved-locations-map { height:300px; background:#f0f0f0; }
+		.geo-status { margin-top:8px; font-size:12px; color:#666; }
+		.saved-location-card { border:1px solid #d1d5db; border-radius:10px; padding:12px; cursor:pointer; background:#f9fafb; }
+		.saved-location-card-title { font-weight:600; font-size:13px; color:#111; margin-bottom:4px; }
+		.saved-location-card-address { font-size:12px; color:#666; line-height:1.4; }
+		.saved-location-card-actions { display:flex; gap:6px; margin-top:8px; }
+		.saved-location-card-actions button { flex:1; padding:6px 10px; font-size:11px; border:none; border-radius:6px; cursor:pointer; }
+		.btn-use-location { background:#22c55e; color:white; }
+		.btn-delete-location { background:#f87171; color:white; }
+		.add-new-address-btn { width:100%; padding:12px; background:#fff; color:#000; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+		.add-address-panel-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:135; padding:16px; }
+		.add-address-panel-backdrop.active { display:flex; }
+		.add-address-panel { width:100%; max-width:600px; background:#fff; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; position:relative; }
+		.add-address-panel-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+		.add-address-panel-subtitle { font-size:13px; color:#666; margin-bottom:20px; }
+		.add-address-panel-close { position:absolute; top:16px; right:16px; font-size:24px; cursor:pointer; background:none; border:none; color:#999; }
+		.modal-buttons { display:flex; gap:12px; margin-top:20px; }
+		.modal-buttons button { flex:1; padding:12px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+		.btn-primary { background:#22c55e; color:#fff; }
+		.btn-secondary { background:#e5e7eb; color:#111; }
+		.btn-select-location { display:none; margin-top:12px; width:100%; padding:10px 16px; background:#22c55e; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; }
+
+		.account-panel-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; z-index:146; }
+		.account-panel-backdrop.active { display:block; }
+		.account-panel { position:fixed; top:0; right:0; height:100%; width:360px; max-width:100%; background:#fff; box-shadow:-20px 0 60px rgba(0,0,0,0.25); transform:translateX(110%); transition:transform 300ms ease; z-index:147; padding:20px; overflow:auto; }
+		.account-panel-backdrop.active .account-panel { transform:translateX(0); }
+		.account-top-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+		.account-back-btn { background:#f3f4f6; border:none; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; }
+		.account-panel-title { font-size:20px; font-weight:700; color:#111827; margin:0; }
+		.account-profile-box { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fafafa; margin-bottom:12px; }
+		.account-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+		.account-header > div { width:100%; }
+		.account-name-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; column-gap:8px; }
+		.account-name { font-size:18px; font-weight:700; line-height:1.25; min-width:0; white-space:normal; overflow-wrap:anywhere; word-break:break-word; color:#111; }
+		.account-name-action-btn { background:#f3f4f6; border:none; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+		.account-phone { font-size:13px; color:#4b5563; margin-top:2px; }
+		.account-email-row { margin:0; font-size:13px; color:#4b5563; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+		.btn-google { border:1px solid #d1d5db; background:#fff; color:#111; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
+		.account-menu { display:flex; gap:8px; margin:12px 0; }
+		.account-menu button { flex:1; padding:8px; border:1px solid #e5e7eb; background:#fff; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer; }
+		.account-menu button.active { background:#22c55e; color:#fff; border-color:#16a34a; box-shadow:0 4px 12px rgba(34,197,94,0.28);}
+		.account-section { margin-top:10px; }
+		.account-section h4 { margin:0 0 8px; font-size:14px; font-weight:700; color:#111; text-transform:lowercase; }
+		.account-item { border:1px solid #f1f5f9; background:#fbfbfb; border-radius:10px; padding:10px; color:#374151; font-size:13px; line-height:1.4; }
+		.account-orders-summary { margin-bottom:8px; padding:8px 10px; border:1px solid #dcfce7; border-radius:8px; background:#f0fdf4; color:#166534; font-size:12px; font-weight:600; }
+		.account-past-orders-container { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fafafa; max-height:250px; overflow-y:auto; }
+		.account-past-orders-container .past-order-card { margin-bottom:10px; }
+		.account-past-orders-container .past-order-card:last-child { margin-bottom:0; }
+		.past-order-card { border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+		.past-order-card .card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; }
+		.past-order-card .card-title { font-size:14px; font-weight:700; color:#1f2937; }
+		.past-order-card .card-status { display:inline-block; margin-top:4px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:600; background:#e0f2fe; color:#075985; }
+		.past-order-card .card-status.delivered { background:#dcfce7; color:#166534; }
+		.past-order-card .card-status.cancelled { background:#fee2e2; color:#991b1b; }
+		.past-order-card .card-total { font-size:15px; font-weight:700; color:#16a34a; white-space:nowrap; }
+		.past-order-card .card-subtitle { font-size:12px; color:#6b7280; margin-bottom:8px; }
+		.past-order-card .products-gallery { display:flex; gap:8px; overflow-x:auto; margin:8px 0; padding:4px 0; }
+		.past-order-card .product-thumb { width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid #f1f5f9; background:#f9fafb; flex-shrink:0; }
+		.past-order-card .products-details { margin-top:6px; font-size:12px; color:#374151; display:grid; gap:4px; }
+		.past-order-card .products-more { font-size:11px; color:#6b7280; font-weight:600; }
+		.past-order-card .view-details-btn { width:100%; margin-top:10px; padding:8px 12px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:#374151; transition:all 0.2s ease; }
+		.past-order-card .view-details-btn:hover { background:#e5e7eb; border-color:#d1d5db; }
+		.order-info-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:150; padding:16px; }
+		.order-info-modal-backdrop.active { display:flex; }
+		.order-info-modal { width:100%; max-width:700px; max-height:90vh; overflow:auto; background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.28); padding:16px; position:relative; }
+		.order-info-close { position:absolute; top:12px; right:12px; background:none; border:none; font-size:24px; cursor:pointer; color:#9ca3af; }
+		.order-info-head-title { font-size:18px; font-weight:700; color:#111827; margin-bottom:4px; }
+		.order-info-head-subtitle { font-size:13px; color:#6b7280; margin-bottom:12px; }
+		.order-info-status-wrap { margin:12px 0; }
+		.order-info-status-label { font-size:12px; font-weight:600; color:#6b7280; margin-bottom:6px; }
+		.order-info-status-pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:600; background:#e0f2fe; color:#075985; }
+		.order-info-status-pill.delivered { background:#dcfce7; color:#166534; }
+		.order-info-status-pill.cancelled { background:#fee2e2; color:#991b1b; }
+		.order-info-products { margin:14px 0; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#f9fafb; }
+		.order-info-product-row { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e5e7eb; }
+		.order-info-product-row:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
+		.order-info-product-image { width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid #d1d5db; }
+		.order-info-product-main { flex:1; }
+		.order-info-product-name { font-size:13px; font-weight:600; color:#111827; }
+		.order-info-product-sub { font-size:12px; color:#6b7280; margin-top:2px; }
+		.order-info-product-price { font-size:13px; font-weight:600; color:#22c55e; white-space:nowrap; }
+		.order-info-bill { margin:14px 0; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#f9fafb; }
+		.order-info-bill-title { font-size:13px; font-weight:700; color:#111827; margin-bottom:8px; }
+		.order-info-bill-row { display:flex; justify-content:space-between; font-size:13px; color:#374151; margin-bottom:6px; }
+		.order-info-bill-row:last-child { margin-bottom:0; }
+		.order-info-bill-total { border-top:1px solid #d1d5db; padding-top:8px; margin-top:8px; font-weight:700; color:#111827; }
+		.order-info-foot { margin:12px 0; }
+		.order-info-foot-title { font-size:12px; font-weight:700; color:#6b7280; text-transform:uppercase; margin-bottom:8px; }
+		.order-info-foot-row { display:flex; justify-content:space-between; font-size:12px; color:#374151; margin-bottom:6px; }
+		.order-info-foot-row .label { font-weight:600; min-width:120px; }
+		.order-info-download-btn { margin-top:12px; width:100%; border:none; border-radius:10px; padding:10px 14px; background:#111827; color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:background 0.2s ease; }
+		.order-info-download-btn:hover { background:#000; }
+		.account-locations-container { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fafafa; max-height:250px; overflow-y:auto;}
+		.account-location-row { margin-bottom:8px; padding:8px 10px; border:1px solid #eef2f7; border-radius:8px; background:#f9fafb; }
+		.account-location-row:last-child { margin-bottom:0; }
+		.account-name-edit-input { width:100%; font-size:16px; font-weight:700; border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; }
+		.account-actions { display:flex; gap:8px; margin-top:12px; }
+		.account-actions button { flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+		.btn-edit { background:#f3f4f6; color:#111; }
+		.btn-back { background:#e5e7eb; color:#111; }
+		.btn-logout { background:#ef4444; color:#fff; }
+
+		.delivery-slot-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:152; padding:16px; }
+		.delivery-slot-backdrop.active { display:flex; }
+		.delivery-slot-modal { width:100%; max-width:820px; max-height:90vh; overflow:auto; background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.25); padding:16px; }
+		.delivery-slot-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+		.delivery-slot-title { font-size:18px; font-weight:700; color:#111827; }
+		.delivery-slot-close { border:none; background:#f3f4f6; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:18px; }
+		.delivery-slot-days { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; }
+		.delivery-day-card { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fafafa; }
+		.delivery-day-title { font-size:14px; font-weight:700; color:#111827; }
+		.delivery-day-subtitle { font-size:12px; color:#6b7280; margin-bottom:8px; }
+		.delivery-period-label { font-size:11px; font-weight:700; color:#0f172a; margin:8px 0 4px; text-transform:uppercase; }
+		.delivery-slot-option { width:100%; text-align:left; border:1px solid #d1d5db; background:#fff; border-radius:8px; padding:6px 8px; font-size:12px; cursor:pointer; margin-bottom:6px; }
+		.delivery-slot-option:hover { border-color:#22c55e; background:#f0fdf4; }
+		.delivery-slot-option.selected { border-color:#16a34a; background:#dcfce7; color:#14532d; font-weight:600; }
+
+		#unserviceableState {
+			display: none;
+			margin: 18px 0 10px;
+			background: #fff;
+			border: 1px solid #e5e7eb;
+			border-radius: 16px;
+			padding: 24px 16px;
+			text-align: center;
+		}
+		.unserviceable-content { max-width: 520px; margin: 0 auto; }
+		.unserviceable-image { width: 180px; max-width: 60vw; height: auto; margin: 0 auto 14px; display: block; }
+		.unserviceable-title { font-size: 24px; line-height: 1.25; margin-bottom: 8px; color: #111827; }
+		.unserviceable-text { font-size: 14px; line-height: 1.6; color: #4b5563; }
+
+		body.unserviceable-mode .page-wrapper > :not(.sticky-top):not(#unserviceableState) {
+			display: none !important;
+		}
+		body.unserviceable-mode #unserviceableState {
+			display: block;
+		}
+
+		/* MOBILE LAYOUT ENHANCEMENTS */
+		@media (max-width: 768px) {
+			.page-wrapper {
+				padding: 10px;
+			}
+
+			header {
+				flex-wrap: wrap;
+				gap: 10px;
+				padding: 8px 0 12px;
+				position: relative;
+			}
+
+			#grozoLogo {
+				height: 38px;
+			}
+
+			.location-select {
+				flex: 1 1 calc(100% - 90px);
+				min-width: 0;
+				text-align: center;
+			}
+
+			.header-right {
+				width: 100%;
+				justify-content: space-between;
+				gap: 8px;
+				font-size: 12px;
+				padding-right: 40px;
+			}
+
+			#loginIcon,
+			#userAvatar {
+				position: absolute;
+				top: 6px;
+				right: 0;
+				z-index: 4;
+			}
+
+			.cart-btn {
+				padding: 6px 8px;
+			}
+
+			.search-section {
+				margin: 4px 0 10px;
+			}
+
+			.search-bar input {
+				padding: 10px 12px;
+				font-size: 13px;
+			}
+
+			.search-bar button {
+				padding: 10px 14px;
+				font-size: 13px;
+			}
+
+			.tagline {
+				margin: 8px 0 14px;
+				font-size: 15px;
+			}
+
+			.tabs,
+			.product-tabs {
+				flex-wrap: nowrap;
+				overflow-x: auto;
+				overflow-y: hidden;
+				-webkit-overflow-scrolling: touch;
+				scrollbar-width: none;
+				gap: 8px;
+				height: 52px;
+			}
+
+			.product-tabs::-webkit-scrollbar {
+				display: none;
+			}
+
+			.tab,
+			.product-tab {
+				flex: 0 0 auto;
+				font-size: 12px;
+				padding: 0 10px;
+				line-height: 52px;
+			}
+
+			.business-icons {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 8px;
+			}
+
+			.business-icon-item img {
+				width: 64px;
+				height: 64px;
+			}
+
+			.business-icon-name {
+				font-size: 12px;
+			}
+
+			.card-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 8px;
+			}
+
+			.card {
+				padding: 8px;
+			}
+
+			.card img {
+				width: 100%;
+				height: 72px;
+			}
+
+			.card-name {
+				font-size: 12px;
+			}
+
+			.location-modal,
+			.add-address-panel,
+			.order-info-modal,
+			.b2b-tracking-modal {
+				max-width: 100%;
+				width: 100%;
+				max-height: 92vh;
+				border-radius: 12px;
+			}
+
+			.form-row {
+				grid-template-columns: 1fr;
+			}
+
+			/* Cart mobile optimization */
+			.cart-page-backdrop {
+				padding: 8px;
+			}
+
+			.cart-page {
+				width: 100%;
+				max-width: 100%;
+				max-height: 95vh;
+				padding: 12px;
+				border-radius: 10px;
+			}
+
+			.cart-item {
+				gap: 8px;
+				padding: 8px;
+			}
+
+			.cart-item img {
+				width: 56px;
+				height: 56px;
+			}
+
+			.cart-item-details {
+				font-size: 12px;
+			}
+
+			.cart-item-controls {
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+
+			.cart-summary {
+				font-size: 13px;
+			}
+
+			.cart-summary-row.total {
+				font-size: 16px;
+			}
+
+			/* Tracking modal mobile optimization */
+			.b2b-tracking-backdrop {
+				padding: 10px;
+			}
+
+			.b2b-tracking-modal {
+				padding: 14px;
+			}
+
+			.b2b-tracking-title {
+				font-size: 20px;
+				padding-right: 36px;
+			}
+
+			.b2b-order-tabs {
+				gap: 6px;
+			}
+
+			.b2b-order-tab {
+				padding: 7px 10px;
+				font-size: 12px;
+			}
+
+			.b2b-timeline {
+				flex-wrap: nowrap;
+				overflow-x: auto;
+				overflow-y: hidden;
+				-webkit-overflow-scrolling: touch;
+				padding-bottom: 4px;
+				gap: 8px;
+			}
+
+			.b2b-step {
+				min-width: 92px;
+				font-size: 11px;
+			}
+
+			#b2bTrackingMap {
+				height: 220px;
+			}
+
+			/* Account drawer mobile optimization */
+			.account-panel {
+				width: min(360px, max(320px, 86vw));
+				max-width: 360px;
+				height: 100dvh;
+				border-radius: 16px 0 0 16px;
+				padding: 14px;
+				padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+				padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+			}
+
+			.account-panel-title {
+				font-size: 18px;
+			}
+
+			.account-profile-box {
+				padding: 10px;
+				margin-bottom: 10px;
+			}
+
+			.account-name {
+				font-size: 16px;
+			}
+
+			.account-phone,
+			.account-email-row {
+				font-size: 12px;
+			}
+
+			.account-email-row {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) auto;
+				align-items: center;
+				gap: 6px;
+			}
+
+			.account-email-row > span {
+				min-width: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.btn-google {
+				white-space: nowrap;
+				padding: 5px 10px;
+				font-size: 11px;
+			}
+
+			.account-menu {
+				gap: 6px;
+				overflow-x: auto;
+				overflow-y: hidden;
+				-webkit-overflow-scrolling: touch;
+				scrollbar-width: none;
+			}
+
+			.account-menu::-webkit-scrollbar {
+				display: none;
+			}
+
+			.account-menu button {
+				flex: 0 0 auto;
+				min-width: 110px;
+				padding: 8px 10px;
+				font-size: 12px;
+			}
+
+			.account-section h4 {
+				font-size: 13px;
+			}
+
+			.account-past-orders-container,
+			.account-locations-container {
+				max-height: 220px;
+			}
+
+			.past-order-card {
+				padding: 10px;
+			}
+
+			.past-order-card .card-title {
+				font-size: 13px;
+			}
+
+			.past-order-card .card-total {
+				font-size: 14px;
+			}
+
+			.past-order-card .product-thumb {
+				width: 44px;
+				height: 44px;
+			}
+
+			.account-actions button,
+			.past-order-card .view-details-btn {
+				min-height: 38px;
+			}
+		}
+
+		@media (max-width: 420px) {
+			.icon-circle,
+			#userAvatar {
+				width: 24px;
+				height: 24px;
+			}
+
+			.business-icons,
+			.card-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 6px;
+			}
+
+			.card {
+				padding: 6px;
+			}
+
+			.card img {
+				height: 64px;
+			}
+
+			.cart-page {
+				padding: 10px;
+			}
+
+			.cart-item img {
+				width: 52px;
+				height: 52px;
+			}
+
+			.b2b-tracking-modal {
+				padding: 12px;
+			}
+
+			.b2b-tracking-title {
+				font-size: 18px;
+			}
+
+			#b2bTrackingMap {
+				height: 190px;
+			}
+
+			.account-panel {
+				width: min(340px, max(300px, 90vw));
+				max-width: 340px;
+				padding: 12px;
+			}
+
+			.account-panel-title {
+				font-size: 17px;
+			}
+
+			.account-name {
+				font-size: 15px;
+			}
+
+			.account-menu button {
+				min-width: 100px;
+				font-size: 11px;
+				padding: 7px 9px;
+			}
+
+			.account-actions {
+				flex-direction: column;
+			}
+
+			.account-actions button {
+				width: 100%;
+			}
+		}
+		/* Shared product tilt card modal */
+		.tilt-card-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.72); display:none; align-items:center; justify-content:center; z-index:200; padding:20px; }
+		.tilt-card-backdrop.active { display:flex; }
+		.tilt-card-container { width:100%; max-width:440px; perspective:1000px; }
+		.tilt-card { position:relative; width:100%; height:560px; transform-style:preserve-3d; transition:transform .6s ease; cursor:pointer; }
+		.tilt-card.flipped { transform:rotateY(-180deg); }
+		.tilt-card-front, .tilt-card-back { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:#fff; border-radius:18px; padding:24px; box-shadow:0 18px 55px rgba(0,0,0,.28); }
+		.tilt-card-back { transform:rotateY(180deg); overflow:auto; }
+		.tilt-card-image-wrapper { display:flex; justify-content:center; margin-bottom:16px; }
+		.tilt-card-image { width:100%; max-width:330px; height:250px; object-fit:cover; border-radius:14px; }
+		.tilt-card-name { font-size:18px; font-weight:700; text-align:center; color:#111827; margin-bottom:8px; }
+		.tilt-card-price-row { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; }
+		.tilt-card-actual-price { text-decoration:line-through; color:#6b7280; }
+		.tilt-card-discounted-price { font-size:24px; font-weight:700; color:#16a34a; }
+		.tilt-card-discount-percent { text-align:center; color:#16a34a; font-weight:600; }
+		.tilt-card-close { position:absolute; top:10px; right:10px; border:none; width:32px; height:32px; border-radius:50%; background:#ef4444; color:#fff; font-size:20px; cursor:pointer; }
+		.tilt-card-info-section { border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin-top:10px; }
+		.tilt-card-info-item { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+		.tilt-card-info-item:last-child { margin-bottom:0; }
+		.tilt-card-info-icon { width:42px; height:42px; object-fit:contain; border-radius:8px; }
+		.tilt-card-info-text { font-size:13px; font-weight:600; color:#111827; }
+		.tilt-card-disclaimer { margin-top:10px; font-size:11px; line-height:1.5; background:#fff9e6; border:1px solid #ffd966; border-radius:8px; padding:10px; color:#555; }
+		.tilt-card-customer-care { margin-top:10px; font-size:12px; line-height:1.5; background:#e0f2fe; border:1px solid #0ea5e9; border-radius:8px; padding:10px; color:#0f172a; }
+		.tilt-card-customer-care strong { display:block; margin-bottom:4px; color:#0369a1; }
+		.tilt-card-flip-hint { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); font-size:11px; color:#6b7280; background:rgba(255,255,255,.9); padding:3px 8px; border-radius:999px; }
+		.tilt-card-glow { position:absolute; width:220px; height:220px; border-radius:50%; pointer-events:none; opacity:0; background:radial-gradient(circle, rgba(34,197,94,.18) 0%, transparent 70%); }
+	</style>
+</head>
+<body>
+	<div class="page-wrapper">
+		<div class="sticky-top">
+			<header>
+				<div class="logo"><img src="grozo logo.png" alt="Grozo" id="grozoLogo" /></div>
+
+				<div class="location-select" onclick="selectLocation()">
+					<span id="locationText">Select location ▼</span>
+				</div>
+
+				<div class="header-right">
+					<div class="b2b-toggle-wrap">
+					<label class="b2b-toggle-label" for="b2bToggleSwitch">B2B</label>
+					<label class="b2b-switch" title="B2B mode">
+						<input type="checkbox" id="b2bToggleSwitch" title="Toggle B2B mode" checked onchange="handleB2BToggleFromB2B(this.checked)" />
+							<span class="b2b-slider"></span>
+						</label>
+					</div>
+					<button title="Order Tracking" onclick="openTrackingPage()" class="cart-btn"><img src="locations.png" alt="tracking" /></button>
+					<button title="Cart" onclick="openCartPage()" class="cart-btn"><img src="shopping-cart.png" alt="Cart" /><span id="cartCount" class="cart-badge">0</span></button>
+					<button title="Notifications" onclick="toggleNotifications()" class="cart-btn"><img src="notification.png" alt="notifications" /><span id="notificationBadge" class="cart-badge" style="display:none;">0</span></button>
+					<div id="loginIcon" class="icon-circle" title="Login" onclick="handleAuthClick()"><img src="user.png" alt="Login" /></div>
+					<img id="userAvatar" class="icon-circle icon-hidden" title="User" onclick="handleAuthClick()" alt="User avatar" />
+				</div>
+			</header>
+
+			<section class="search-section">
+				<div class="search-container">
+					<div class="search-bar">
+						<input id="searchInput" type="text" placeholder="Search B2B products..." onkeyup="handleSearchInput()" />
+						<button onclick="doSearch()">Search</button>
+					</div>
+					<div id="searchSuggestions" class="search-suggestions"></div>
+					<div id="noResults" class="no-results">No B2B products found.</div>
+				</div>
+			</section>
+		</div>
+
+		<section id="unserviceableState" aria-live="polite">
+			<div class="unserviceable-content">
+				<img src="unserviceable.png" alt="Location currently not serviceable" class="unserviceable-image" />
+				<h2 class="unserviceable-title">Sit Tight! We’re Coming Soon!</h2>
+				<p class="unserviceable-text">Our team is working tirelessly to bring lightning fast delivery to your location</p>
+			</div>
+		</section>
+
+		<div class="tagline"><span>Grozo Business</span> for bulk and wholesale orders</div>
+
+		<div id="rotatingBanners" class="rotating-banners" aria-label="B2B advertisements">
+			<div class="ad-banner-track" id="adBannerTrack">
+				<div class="ad-banner-slide"><img src="B2Badd4.png" alt="B2B Banner 1" /></div>
+				<div class="ad-banner-slide"><img src="B2Badd3.png" alt="B2B Banner 2" /></div>
+			</div>
+			<button class="ad-banner-nav prev" type="button" aria-label="Previous banner">‹</button>
+			<button class="ad-banner-nav next" type="button" aria-label="Next banner">›</button>
+			<div id="adDots" class="ad-dots"></div>
+		</div>
+
+		<section class="business-icons" aria-label="Business categories">
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="restaurant.png" alt="Restaurant" />
+				</div>
+				<div class="business-icon-name">Restaurant</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="catering.png" alt="Catering" />
+				</div>
+				<div class="business-icon-name">Catering</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="hotel.png" alt="Hotel" />
+				</div>
+				<div class="business-icon-name">Hotel</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="street food.png" alt="Street Food" />
+				</div>
+				<div class="business-icon-name">Street Food</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="cloud kitchen.png" alt="Cloud Kitchen" />
+				</div>
+				<div class="business-icon-name">Cloud Kitchen</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="food truck.png" alt="Food Truck" />
+				</div>
+				<div class="business-icon-name">Food Truck</div>
+			</div>
+			<div class="business-icon-wrap">
+				<div class="business-icon-item">
+					<img src="food business.png" alt="Food Business" />
+				</div>
+				<div class="business-icon-name">Food Business</div>
+			</div>
+		</section>
+
+		<div id="productTabs" class="tabs product-tabs" aria-label="Product categories">
+			<button class="tab product-tab active" type="button" data-tab="all">ALL</button>
+			<button class="tab product-tab" type="button" data-tab="vegetables">VEGETABLES</button>
+			<button class="tab product-tab" type="button" data-tab="fruits">FRUITS</button>
+			<button class="tab product-tab" type="button" data-tab="spices-masalas">SPICES / MASALAS</button>
+			<svg id="b2bTabSvg" class="tabs-curve-svg" viewBox="0 0 1000 58" preserveAspectRatio="none" aria-hidden="true">
+				<defs>
+					<linearGradient id="b2bTabCurveGradient" gradientUnits="userSpaceOnUse" x1="0" y1="50" x2="1000" y2="50">
+						<stop offset="0%" stop-color="black" stop-opacity="0" />
+						<stop offset="45%" stop-color="black" stop-opacity="1" />
+						<stop offset="55%" stop-color="black" stop-opacity="1" />
+						<stop offset="100%" stop-color="black" stop-opacity="0" />
+					</linearGradient>
+				</defs>
+				<path id="b2bTabPath" class="tabs-curve-path" d="M0 50 L1000 50"></path>
+			</svg>
+		</div>
+
+		<h2 class="section-title">Top Selling</h2>
+		<div id="productsGrid" class="card-grid"></div>
+	</div>
+
+	<div id="locationModalBackdrop" class="location-modal-backdrop" onclick="closeLocationModal(event)">
+		<div class="location-modal" onclick="event.stopPropagation();">
+			<div class="location-modal-title">Select Your Location</div>
+			<div class="location-modal-subtitle">Enter your address for faster delivery</div>
+
+			<div class="location-section">
+				<button class="add-new-address-btn" onclick="toggleAddAddressPanel()"><span>+</span> Add New Address</button>
+			</div>
+
+			<div class="location-section" id="savedLocationsSection">
+				<div class="location-section-title">Your Saved Locations</div>
+				<div id="savedLocationsList" class="saved-locations-list"></div>
+				<div id="savedLocationsMapContainer" class="saved-locations-map-container">
+					<div id="savedLocationsMap" class="saved-locations-map"></div>
+				</div>
+			</div>
+
+			<div class="modal-buttons">
+				<button class="btn-secondary" onclick="closeLocationModal()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="addAddressPanelBackdrop" class="add-address-panel-backdrop" onclick="closeAddAddressPanel(event)">
+		<div class="add-address-panel" onclick="event.stopPropagation();">
+			<button class="add-address-panel-close" onclick="closeAddAddressPanel()">x</button>
+			<div class="add-address-panel-title">Location Information</div>
+			<div class="add-address-panel-subtitle">Add a new delivery address</div>
+
+			<div class="location-section">
+				<div class="location-section-header">
+					<div class="location-section-title">Select Your Location</div>
+					<button class="location-reset-btn" onclick="resetLocationSelection()">reset</button>
+				</div>
+				<div class="geolocation-box">
+					<p>Enable your current location for better services</p>
+					<div class="geolocation-actions">
+						<button class="geolocation-btn" id="enableGeoBtn" onclick="enableGeolocation()">Enable</button>
+						<button class="geolocation-btn manual-location-btn" id="manualLocationBtn" onclick="openManualLocationPicker()">add location manually</button>
+					</div>
+					<p id="geoStatus" class="geo-status"></p>
+					<div id="mapContainer"></div>
+					<button class="btn-select-location" id="selectLocationBtn" onclick="selectLocationFromMap()">Select This Location</button>
+				</div>
+			</div>
+
+			<div class="location-section">
+				<div class="location-section-title">Add Address</div>
+				<div class="form-row">
+					<div class="form-group form-row-full">
+						<label>Address Label</label>
+						<select id="addressLabel">
+							<option value="">Select Label (Optional)</option>
+							<option value="Restaurant">Restaurant</option>
+							<option value="Catering">Catering</option>
+							<option value="Hotel">Hotel</option>
+							<option value="Street Food">Street Food</option>
+							<option value="Cloud Kitchen">Cloud Kitchen</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group form-row-full">
+						<label>Full Address / Area Name</label>
+						<input type="text" id="addressInput" placeholder="e.g., MG Road, Bangalore" />
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Flat / House No.</label>
+						<input type="text" id="flatNo" placeholder="Apt 101" />
+					</div>
+					<div class="form-group">
+						<label>Area</label>
+						<input type="text" id="area" placeholder="Colony / Society" />
+					</div>
+				</div>
+				<input type="hidden" id="pincode" />
+				<input type="hidden" id="state" />
+				<input type="hidden" id="district" />
+				<input type="hidden" id="city" />
+			</div>
+
+			<div class="modal-buttons">
+				<button class="btn-secondary" onclick="closeAddAddressPanel()">Cancel</button>
+				<button class="btn-primary" onclick="saveLocation()">Save Location</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="accountPanelBackdrop" class="account-panel-backdrop" onclick="closeAccountPanel(event)">
+		<div class="account-panel" onclick="event.stopPropagation();">
+			<div class="account-top-row">
+				<button class="account-back-btn" onclick="closeAccountPanel()" aria-label="Back">⮜</button>
+				<div class="account-panel-title">My Account</div>
+			</div>
+
+			<div class="account-profile-box">
+				<div class="account-header">
+					<div>
+						<div class="account-name-row">
+							<div id="accountName" class="account-name">Grozo User</div>
+							<button id="nameEditToggleBtn" class="account-name-action-btn" onclick="toggleInlineNameEdit()" title="Edit Name" aria-label="Edit Name">🖋</button>
+						</div>
+						<div id="accountPhone" class="account-phone">+91-xxxxxxxxxx</div>
+					</div>
+				</div>
+
+				<div class="account-email-row">
+					<span id="accountEmailText">email:</span>
+					<div id="googleSignInButton" class="account-google-slot">
+						<button class="account-google-btn" onclick="triggerGoogleSignIn()">google sign in</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="account-menu">
+				<button data-account-tab="saved" onclick="showAccountTab('saved')">Saved locations</button>
+				<button data-account-tab="orders" onclick="showAccountTab('orders')">My orders</button>
+				<button data-account-tab="subs" onclick="showAccountTab('subs')">Subscription</button>
+			</div>
+
+			<div id="tab_saved" class="account-section">
+				<h4>saved locations</h4>
+				<div id="accountSavedLocations" class="account-item">📍 No saved locations</div>
+			</div>
+
+			<div id="tab_orders" class="account-section" style="display:none;">
+				<h4>My orders</h4>
+				<div id="accountOrdersInfo" class="account-item">No past orders</div>
+			</div>
+
+			<div id="tab_subs" class="account-section" style="display:none;">
+				<h4>Subscription</h4>
+				<div id="accountSubsInfo" class="account-item">No active subscriptions</div>
+			</div>
+
+			<div class="account-actions">
+				<button class="btn-logout" onclick="logoutUser()">Logout</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="cartPageBackdrop" class="cart-page-backdrop" onclick="closeCartPage(event)">
+		<div class="cart-page" onclick="event.stopPropagation();">
+			<div class="cart-header">
+				<h3 class="cart-title">B2B Cart</h3>
+				<button class="cart-close-btn" onclick="closeCartPage()">Close</button>
+			</div>
+			<div id="cartItemsList" class="cart-items"></div>
+			<div class="cart-summary">
+				<div style="margin:10px 0 12px; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fafafa;">
+					<div style="display:flex; gap:8px; align-items:center; position:relative;">
+						<input id="cartPromoInputB2B" type="text" autocomplete="off" placeholder="Enter promo code" style="flex:1; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;" />
+						<button id="applyPromoBtnB2B" class="btn-login" style="padding:8px 12px; width:auto;" onclick="applyB2BPromoCode()">Apply</button>
+					</div>
+					<div id="promoMessageB2B" style="font-size:13px; color:#16a34a; margin-top:8px;"></div>
+					<div style="display:flex; justify-content:flex-end;">
+						<a id="viewAllB2BPromosLink" href="#" onclick="openB2BPromoCodesPanel(); return false;" style="font-size:13px; color:#22c55e; text-decoration:none; margin-top:6px;">view all promo code ></a>
+					</div>
+				</div>
+				<div style="font-size:16px; font-weight:600; margin-bottom:8px;"> 🧾 Bill summary</div>
+				<div id="cartSummary" style="font-size:14px; color:#111;">
+					<div class="cart-summary-row"><div>Subtotal</div><div id="cartSubtotal">₹0</div></div>
+					<div class="cart-summary-row"><div>Delivery Fee</div><div id="cartDelivery">₹0</div></div>
+					<div class="cart-summary-row"><div>Handling Fee</div><div id="cartHandling">₹0</div></div>
+					<div class="cart-summary-row"><div>Platform Fee</div><div id="cartPlatform">₹0</div></div>
+					<div class="cart-summary-row" id="cartDiscountRow" style="display:none;"><div>Discount</div><div id="cartDiscount">-₹0</div></div>
+					<div class="cart-summary-row total"><div>Amount Payable</div><div id="cartFinal">₹0</div></div>
+					<div style="margin-top:8px; padding:8px 10px; border-radius:8px; background:#ecfdf5; color:#166534; font-weight:600;">🎉 Total Saved: <span id="savedRupees">₹0</span></div>
+				</div>
+
+				<div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:12px;">
+					<div style="font-size:16px; font-weight:600; margin-bottom:8px;">Receiver's mobile Number</div>
+					<div style="display:flex; gap:8px; align-items:center;">
+						<div style="display:flex; align-items:center; gap:4px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#f9fafb;">
+							<span style="font-size:16px;">🇮🇳</span>
+							<span style="font-size:14px; color:#666;">+91</span>
+						</div>
+						<input id="mobileNumberInputB2B" type="tel" placeholder="Enter 10-digit mobile number" maxlength="10" pattern="[0-9]{10}" style="flex:1; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px;" />
+						<button id="applyMobileBtnB2B" class="btn-login" style="padding:8px 12px; width:auto;" onclick="applyB2BMobileNumber()">Apply</button>
+					</div>
+					<div id="mobileErrorB2B" style="font-size:13px; color:#ef4444; margin-top:4px;"></div>
+				</div>
+				<div style="margin-top:10px; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#f8fafc;">
+					<div style="font-size:14px; font-weight:700; margin-bottom:8px;">Delivery Time Slot</div>
+					<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+						<button id="deliverySlotBtnB2B" class="cart-place-order-btn" type="button" onclick="chooseB2BDeliverySlot()" style="margin-top:0; width:auto; padding:9px 14px; background:#0ea5e9;">Select Time</button>
+						<div id="deliverySlotTextB2B" style="font-size:13px; color:#0f172a;">- Not selected</div>
+					</div>
+				</div>
+
+				<div style="margin-top:10px; border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fafafa;">
+					<div style="font-size:14px; font-weight:700; margin-bottom:8px;">Location Confirmation Checklist</div>
+					<div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+						<div id="locationChecklistAddressB2B" style="font-size:13px; color:#374151; flex:1;">No location selected</div>
+						<button type="button" onclick="openB2BLocationChangeFromChecklist()" style="border:1px solid #22c55e; background:#fff; color:#16a34a; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;">Change</button>
+					</div>
+					<label style="display:flex; gap:8px; align-items:flex-start; margin-top:10px; font-size:13px; color:#111; cursor:pointer;">
+						<input id="locationConfirmCheckboxB2B" type="checkbox" onchange="toggleB2BLocationConfirmation(this.checked)" style="margin-top:2px; accent-color:#22c55e;" />
+						<span>I confirm this is the correct delivery location.</span>
+					</label>
+				</div>
+
+				<button id="placeB2BOrderBtn" class="cart-place-order-btn" type="button" onclick="placeB2BOrder()">Place Order</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="promoCodesPanelB2B" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:flex-end; z-index:151; padding:20px;" onclick="closeB2BPromoCodesPanel(event)">
+		<div style="width:100%; max-width:400px; max-height:90vh; background:#fff; border-radius:12px; overflow:auto; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.25);" onclick="event.stopPropagation();">
+			<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+				<h3 style="margin:0">All Promo Codes</h3>
+				<button onclick="closeB2BPromoCodesPanel()" style="background:#f3f4f6; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;">x Close</button>
+			</div>
+			<div id="promoCodesListB2B" style="display:flex; flex-direction:column; gap:12px;"></div>
+		</div>
+	</div>
+
+	<div id="deliverySlotModalBackdropB2B" class="delivery-slot-backdrop" onclick="closeB2BDeliverySlotModal(event)">
+		<div class="delivery-slot-modal" onclick="event.stopPropagation();">
+			<div class="delivery-slot-header">
+				<div class="delivery-slot-title">Select Delivery Time Slot</div>
+				<button class="delivery-slot-close" onclick="closeB2BDeliverySlotModal()">x</button>
+			</div>
+			<div id="deliverySlotDaysB2B" class="delivery-slot-days"></div>
+		</div>
+	</div>
+
+	<div id="b2bOffPopupBackdrop" class="b2b-popup-backdrop" onclick="closeB2BOffPopup(event)">
+		<div class="b2b-popup" onclick="event.stopPropagation();">
+			<div class="b2b-popup-title">Go Back to Regular Shopping?</div>
+			<div class="b2b-popup-message">You can switch back to B2B anytime.</div>
+			<div class="b2b-popup-actions">
+				<button class="b2b-btn b2b-btn-switch-off" onclick="confirmSwitchOffB2B()">Switch off</button>
+				<button class="b2b-btn b2b-btn-cancel" onclick="cancelSwitchOffB2B()">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="b2bTrackingModalBackdrop" class="b2b-tracking-backdrop" onclick="closeB2BTrackingModal(event)">
+		<div class="b2b-tracking-modal" onclick="event.stopPropagation();">
+			<button class="b2b-tracking-close" onclick="closeB2BTrackingModal()">x</button>
+			<div id="b2bTrackingContent">
+				<div class="b2b-tracking-empty">Loading your B2B orders...</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="b2bOrderInfoModalBackdrop" class="order-info-modal-backdrop" onclick="closeB2BOrderInfoModal(event)">
+		<div class="order-info-modal" onclick="event.stopPropagation();">
+			<button class="order-info-close" onclick="closeB2BOrderInfoModal()">✕</button>
+			<div id="b2bOrderInfoModalContent"></div>
+		</div>
+	</div>
+
+	<div id="tiltCardBackdrop" class="tilt-card-backdrop">
+		<div class="tilt-card-container" id="tiltCardContainer">
+			<div class="tilt-card" id="tiltCard" onclick="flipTiltCard()">
+				<div class="tilt-card-front">
+					<div class="tilt-card-glow" id="tiltCardGlow"></div>
+					<div class="tilt-card-image-wrapper">
+						<img id="tiltCardImage" class="tilt-card-image" src="" alt="Product">
+					</div>
+					<div class="tilt-card-name" id="tiltCardName">Product Name</div>
+					<div class="tilt-card-price-row">
+						<span class="tilt-card-actual-price" id="tiltCardActualPrice">₹0</span>
+						<span class="tilt-card-discounted-price" id="tiltCardDiscountedPrice">₹0</span>
+					</div>
+					<div class="tilt-card-discount-percent" id="tiltCardDiscountPercent">0% off</div>
+					<div class="tilt-card-flip-hint">Click to see more info</div>
+				</div>
+				<div class="tilt-card-back">
+					<button class="tilt-card-close" onclick="event.stopPropagation(); closeTiltCard();" title="Close">x</button>
+					<div class="tilt-card-name">Product Information</div>
+					<div class="tilt-card-info-section">
+						<div class="tilt-card-info-item">
+							<img src="fd.jpg" alt="Fast Delivery" class="tilt-card-info-icon">
+							<div class="tilt-card-info-text">Fast Delivery</div>
+						</div>
+						<div class="tilt-card-info-item">
+							<img src="nr.jpg" alt="No Return" class="tilt-card-info-icon">
+							<div class="tilt-card-info-text">No Return or Exchange</div>
+						</div>
+					</div>
+					<div class="tilt-card-disclaimer"><strong>Disclaimer</strong><br>Product images are for reference only. Actual items, prices, and delivery times may vary.</div>
+					<div class="tilt-card-customer-care"><strong>Customer Care Details</strong>In case of any issue, contact us<br>E-mail: support@grozo.com</div>
+					<div class="tilt-card-flip-hint">Click to see product</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="notificationsPanel" style="display:none;position:fixed;top:60px;right:16px;width:320px;max-height:400px;background:#fff;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2);z-index:149;flex-direction:column;border:1px solid #e5e7eb;">
+		<div style="padding:12px 14px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
+			<span style="font-size:15px;">🔔 Notifications</span>
+			<button onclick="closeNotifications()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background 0.2s" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">✕</button>
+		</div>
+		<div id="notificationsList" style="flex:1;overflow-y:auto;padding:0;min-height:100px"></div>
+	</div>
+
+	<script src="product-tilt-card.js"></script>
+	<script src="tab-curve.js"></script>
+	<script>
+		const B2B_API_ROOT = 'https://grozo-backend.onrender.com/api';
+		const defaultB2BProducts = [
+			{ id: 'potato-set-20kg', name: 'Potato Set 20 Kgs', category: 'vegetables', actualPrice: 700, discountedPrice: 560, unit: '/ set', image: 'Potato set 20 kgs.png' },
+			{ id: 'tomato-set-20kg', name: 'Tomatos Set 20 Kgs', category: 'vegetables', actualPrice: 680, discountedPrice: 530, unit: '/ set', image: 'Tomatos set 20 kgs.png' },
+			{ id: 'fruits-set', name: 'Fruits Set', category: 'fruits', actualPrice: 850, discountedPrice: 680, unit: '/ set', image: 'fruits set.png' },
+			{ id: 'red-chilli-powder-10kg', name: 'Red Chilli Powder 10 Kgs', category: 'spices-masalas', actualPrice: 220, discountedPrice: 180, unit: '/ set', image: 'red chilli powder.png' },
+			{ id: 'turmeric-powder-10kg', name: 'Turmeric Powder 10 Kgs', category: 'spices-masalas', actualPrice: 190, discountedPrice: 150, unit: '/ set', image: 'turmeric powder.png' },
+			{ id: 'white onion-set-20kg', name: 'White Onion Set 20 Kgs', category: 'vegetables', actualPrice: 750, discountedPrice: 600, unit: '/ set', image: 'White onion set 20 kgs.png' },
+			{ id: 'red onion-set-20kg', name: 'Red Onion Set 20 Kgs', category: 'vegetables', actualPrice: 720, discountedPrice: 580, unit: '/ set', image: 'Red onion set 20 kgs.png' }
+		];
+		let b2bProducts = [];
+
+		let activeCategoryTab = 'all';
+		let activeSearchQuery = '';
+		const b2bQtyState = {};
+		let currentDarkStore = null;
+		const MAX_B2B_SERVICE_DISTANCE_KM = 10;
+		const pincodeStateMap = {
+			'560001': { country: 'India', state: 'Karnataka', district: 'Bangalore Urban', city: 'Bangalore' },
+			'500081': { country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad' },
+			'110001': { country: 'India', state: 'Delhi', district: 'New Delhi', city: 'Delhi' },
+			'400001': { country: 'India', state: 'Maharashtra', district: 'Mumbai', city: 'Mumbai' },
+			'600001': { country: 'India', state: 'Tamil Nadu', district: 'Chennai', city: 'Chennai' }
+		};
+
+		function getB2BLocationId() {
+			try {
+				const darkStoreRaw = localStorage.getItem('grozo_current_dark_store');
+				if (darkStoreRaw) {
+					const darkStore = JSON.parse(darkStoreRaw);
+					if (darkStore && darkStore.id) return darkStore.id;
+				}
+			} catch (e) {}
+
+			const locationId = localStorage.getItem('grozo_current_location');
+			if (locationId && locationId !== 'default') return locationId;
+			return null;
+		}
+
+		function getB2BStoreName() {
+			try {
+				const darkStoreRaw = localStorage.getItem('grozo_current_dark_store');
+				if (darkStoreRaw) {
+					const darkStore = JSON.parse(darkStoreRaw);
+					if (darkStore && darkStore.name) return String(darkStore.name).trim();
+				}
+			} catch (e) {}
+
+			const locationId = localStorage.getItem('grozo_current_location');
+			if (!locationId || locationId === 'default') return '';
+			try {
+				const locations = JSON.parse(localStorage.getItem('grozo_locations') || '[]');
+				const found = Array.isArray(locations) ? locations.find((l) => l.id === locationId) : null;
+				return found && found.name ? String(found.name).trim() : '';
+			} catch (e) {
+				return '';
+			}
+		}
+
+		function getB2BStoreQuerySuffix() {
+			const storeName = getB2BStoreName();
+			if (!storeName) return '';
+			return `?store=${encodeURIComponent(storeName)}`;
+		}
+
+		async function fetchB2BConfigFromBackend() {
+			const suffix = getB2BStoreQuerySuffix();
+			const [productsResp, overridesResp, promosResp, feesResp] = await Promise.all([
+				fetch(B2B_API_ROOT + '/b2b/products' + suffix, { headers: { Accept: 'application/json' } }),
+				fetch(B2B_API_ROOT + '/b2b/product-overrides' + suffix, { headers: { Accept: 'application/json' } }),
+				fetch(B2B_API_ROOT + '/b2b/promos' + suffix, { headers: { Accept: 'application/json' } }),
+				fetch(B2B_API_ROOT + '/b2b/fees' + suffix, { headers: { Accept: 'application/json' } })
+			]);
+
+			if (!productsResp.ok || !overridesResp.ok || !promosResp.ok || !feesResp.ok) {
+				throw new Error('B2B config fetch failed');
+			}
+
+			const [productsData, overridesData, promosData, feesData] = await Promise.all([
+				productsResp.json(),
+				overridesResp.json(),
+				promosResp.json(),
+				feesResp.json()
+			]);
+
+			localStorage.setItem(getB2BLocationKey('grozo_b2b_product_catalog'), JSON.stringify(Array.isArray(productsData.products) ? productsData.products : []));
+			localStorage.setItem(getB2BLocationKey('grozo_b2b_product_overrides'), JSON.stringify((overridesData && overridesData.overrides) || {}));
+			localStorage.setItem(getB2BLocationKey('grozo_b2b_admin_promos'), JSON.stringify(Array.isArray(promosData.promos) ? promosData.promos : []));
+			localStorage.setItem(getB2BLocationKey('grozo_b2b_admin_fees'), JSON.stringify((feesData && feesData.fees) || { delivery: 0, handling: 0, platform: 0 }));
+		}
+
+		function getDarkStores() {
+			try {
+				const stores = JSON.parse(localStorage.getItem('grozo_dark_stores') || '[]');
+				return Array.isArray(stores) ? stores : [];
+			} catch (e) {
+				return [];
+			}
+		}
+
+		function calculateDistance(lat1, lon1, lat2, lon2) {
+			const R = 6371;
+			const dLat = (lat2 - lat1) * Math.PI / 180;
+			const dLon = (lon2 - lon1) * Math.PI / 180;
+			const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+				Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+				Math.sin(dLon / 2) * Math.sin(dLon / 2);
+			const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+			return R * c;
+		}
+
+		function findNearestDarkStore(customerLat, customerLon) {
+			const stores = getDarkStores();
+			if (!stores.length || !customerLat || !customerLon) return null;
+
+			let nearest = null;
+			let minDistance = Infinity;
+			stores.forEach((store) => {
+				if (!store.latitude || !store.longitude) return;
+				const distance = calculateDistance(customerLat, customerLon, store.latitude, store.longitude);
+				if (distance < minDistance) {
+					minDistance = distance;
+					nearest = store;
+				}
+			});
+
+			return nearest ? { ...nearest, nearestDistanceKm: minDistance } : null;
+		}
+
+		function setDarkStore(store) {
+			if (store) {
+				currentDarkStore = store;
+				localStorage.setItem('grozo_current_dark_store', JSON.stringify(store));
+			} else {
+				currentDarkStore = null;
+				localStorage.removeItem('grozo_current_dark_store');
+			}
+		}
+
+		function setB2BUnserviceableMode(isUnserviceable) {
+			document.body.classList.toggle('unserviceable-mode', !!isUnserviceable);
+			const cartBackdrop = document.getElementById('cartPageBackdrop');
+			if (isUnserviceable && cartBackdrop && cartBackdrop.classList.contains('active')) {
+				renderCartPage();
+			}
+		}
+
+		async function geocodeAddressCoordinates(locationObj) {
+			const query = [locationObj.flatNo, locationObj.area, locationObj.address, locationObj.city, locationObj.state, locationObj.pincode, 'India'].filter(Boolean).join(', ');
+			if (!query || query.length < 6) return null;
+			const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=1&addressdetails=0`;
+			try {
+				const response = await fetch(url, { headers: { Accept: 'application/json' } });
+				if (!response.ok) return null;
+				const results = await response.json();
+				if (!Array.isArray(results) || !results.length) return null;
+				const first = results[0];
+				const latitude = Number(first.lat);
+				const longitude = Number(first.lon);
+				if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+				return { latitude, longitude };
+			} catch (err) {
+				return null;
+			}
+		}
+
+		async function syncNearestStoreForLocation(locationObj, opts = {}) {
+			const shouldEvaluateServiceability = opts.evaluateServiceability !== false;
+			if (!locationObj) {
+				setDarkStore(null);
+				if (shouldEvaluateServiceability) setB2BUnserviceableMode(false);
+				return null;
+			}
+
+			let latitude = Number(locationObj.latitude);
+			let longitude = Number(locationObj.longitude);
+			if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+				const geocoded = await geocodeAddressCoordinates(locationObj);
+				if (geocoded) {
+					latitude = geocoded.latitude;
+					longitude = geocoded.longitude;
+				}
+			}
+
+			if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+				setDarkStore(null);
+				if (shouldEvaluateServiceability) setB2BUnserviceableMode(false);
+				return null;
+			}
+
+			const nearestStore = findNearestDarkStore(latitude, longitude);
+			if (shouldEvaluateServiceability) {
+				const nearestDistance = Number(nearestStore && nearestStore.nearestDistanceKm);
+				const isOutOfService = Number.isFinite(nearestDistance) && nearestDistance > MAX_B2B_SERVICE_DISTANCE_KM;
+				setB2BUnserviceableMode(isOutOfService);
+			}
+			setDarkStore(nearestStore);
+
+			if (opts.persistLocation !== false) {
+				const withCoords = { ...locationObj, latitude, longitude };
+				localStorage.setItem('grozo_location_b2b', JSON.stringify(withCoords));
+			}
+
+			return nearestStore;
+		}
+
+		function initializeDarkStore() {
+			try {
+				const saved = localStorage.getItem('grozo_current_dark_store');
+				if (saved) currentDarkStore = JSON.parse(saved);
+			} catch (e) {
+				currentDarkStore = null;
+			}
+		}
+
+		function syncB2BLocationTextFromStorage() {
+			const locationText = document.getElementById('locationText');
+			if (!locationText) return;
+			try {
+				const location = JSON.parse(localStorage.getItem('grozo_location_b2b') || 'null');
+				if (location && location.address) {
+					const fullLocation = `${location.flatNo ? `${location.flatNo}, ` : ''}${location.area ? `${location.area}, ` : ''}${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.pincode || ''}`.trim();
+					locationText.textContent = fullLocation || 'Select location ▼';
+				} else {
+					locationText.textContent = 'Select location ▼';
+				}
+			} catch (e) {
+				locationText.textContent = 'Select location ▼';
+			}
+		}
+
+		function getB2BLocationKey(baseKey) {
+			const locationId = getB2BLocationId();
+			if (!locationId) return baseKey;
+			return `${baseKey}_${locationId}`;
+		}
+
+		function loadB2BProductDataByLocation() {
+			const catalog = JSON.parse(localStorage.getItem(getB2BLocationKey('grozo_b2b_product_catalog')) || '[]');
+			const overrides = JSON.parse(localStorage.getItem(getB2BLocationKey('grozo_b2b_product_overrides')) || '{}');
+
+			const merged = [...defaultB2BProducts, ...catalog].map((product) => {
+				const override = overrides[product.id] || {};
+				const rawStock = typeof override.availableStock !== 'undefined' ? override.availableStock : product.availableStock;
+				const stock = Number(rawStock);
+				const hasStock = Number.isFinite(stock) && stock >= 0;
+				const rawQty = typeof override.qtyLimit === 'number' ? override.qtyLimit : product.qtyLimit;
+				const qtyLimit = hasStock
+					? (Number.isFinite(Number(rawQty)) ? Math.min(Number(rawQty), stock) : stock)
+					: rawQty;
+				const outOfStock = hasStock ? stock <= 0 : (override.outOfStock === true || product.outOfStock === true);
+				return {
+					...product,
+					category: product.category || 'all',
+					unit: (typeof product.unit === 'string' && product.unit.trim()) ? product.unit : '/ set',
+					actualPrice: typeof override.actualPrice === 'number' ? override.actualPrice : (product.actualPrice || product.price || 0),
+					discountedPrice: typeof override.discountedPrice === 'number' ? override.discountedPrice : (product.discountedPrice || product.price || 0),
+					image: override.image || product.image || '',
+					qtyLimit,
+					availableStock: hasStock ? Math.floor(stock) : undefined,
+					outOfStock
+				};
+			});
+
+			b2bProducts = merged;
+		}
+
+		function applyB2BStockDecrementFromItems(items) {
+			const key = getB2BLocationKey('grozo_b2b_product_overrides');
+			const overrides = JSON.parse(localStorage.getItem(key) || '{}') || {};
+			(items || []).forEach((item) => {
+				const id = item && item.id ? String(item.id) : '';
+				const qty = Math.max(0, Math.floor(Number(item && item.qty) || 0));
+				if (!id || qty <= 0) return;
+				const current = overrides[id] || {};
+				const stock = Number(current.availableStock);
+				if (!Number.isFinite(stock) || stock < 0) return;
+				const nextStock = Math.max(0, Math.floor(stock - qty));
+				current.availableStock = nextStock;
+				const currentLimit = Number(current.qtyLimit);
+				if (!Number.isFinite(currentLimit) || currentLimit > nextStock) {
+					current.qtyLimit = nextStock;
+				}
+				if (nextStock <= 0) {
+					current.outOfStock = true;
+					current.qtyLimit = 0;
+				}
+				overrides[id] = current;
+			});
+			localStorage.setItem(key, JSON.stringify(overrides));
+			loadB2BProductDataByLocation();
+			renderProducts();
+		}
+
+		function applyB2BStockUpdatesFromServer(stockUpdates) {
+			if (!Array.isArray(stockUpdates) || stockUpdates.length === 0) return;
+			const key = getB2BLocationKey('grozo_b2b_product_overrides');
+			const overrides = JSON.parse(localStorage.getItem(key) || '{}') || {};
+			stockUpdates.forEach((update) => {
+				const id = update && update.id ? String(update.id) : '';
+				if (!id) return;
+				overrides[id] = overrides[id] || {};
+				overrides[id].availableStock = Math.max(0, Math.floor(Number(update.availableStock) || 0));
+				overrides[id].qtyLimit = Math.max(0, Math.floor(Number(update.qtyLimit) || 0));
+				overrides[id].outOfStock = update.outOfStock === true || overrides[id].availableStock <= 0;
+			});
+			localStorage.setItem(key, JSON.stringify(overrides));
+			loadB2BProductDataByLocation();
+			renderProducts();
+		}
+
+		function getDiscountPercent(product) {
+			if (!product.actualPrice || product.actualPrice <= product.discountedPrice) return 0;
+			return Math.round(((product.actualPrice - product.discountedPrice) / product.actualPrice) * 100);
+		}
+
+		function getVisibleProducts() {
+			const query = activeSearchQuery.trim().toLowerCase();
+			return b2bProducts.filter((product) => {
+				const inCategory = activeCategoryTab === 'all' || product.category === activeCategoryTab;
+				const inSearch = !query || product.name.toLowerCase().includes(query);
+				return inCategory && inSearch;
+			});
+		}
+
+		function isB2BProductOutOfStock(productId) {
+			const product = b2bProducts.find((item) => item.id === productId);
+			return !!(product && product.outOfStock === true);
+		}
+
+		function getB2BQtyLimit(productId) {
+			const product = b2bProducts.find((item) => item.id === productId);
+			if (!product) return null;
+			const rawLimit = Number(product.qtyLimit);
+			if (!Number.isFinite(rawLimit) || rawLimit <= 0) return null;
+			return Math.floor(rawLimit);
+		}
+
+		function getB2BOverQtyLimitCartItems(cart) {
+			const items = Array.isArray(cart) ? cart : [];
+			return items.filter((item) => {
+				const qtyLimit = getB2BQtyLimit(item.id) || 20;
+				const qty = Number(item.qty) || 0;
+				return qty > qtyLimit;
+			}).map((item) => {
+				const qtyLimit = getB2BQtyLimit(item.id) || 20;
+				return { ...item, areaQtyLimit: qtyLimit };
+			});
+		}
+
+		function openTiltCardById(productId) {
+			const product = b2bProducts.find((item) => item.id === productId);
+			if (!product || typeof openTiltCard !== 'function') return;
+			openTiltCard({
+				name: product.name,
+				image: product.image,
+				actualPrice: product.actualPrice,
+				discountedPrice: product.discountedPrice
+			});
+		}
+
+		function renderProducts() {
+			const grid = document.getElementById('productsGrid');
+			const noResults = document.getElementById('noResults');
+			if (!grid) return;
+
+			const visibleProducts = getVisibleProducts();
+			grid.innerHTML = visibleProducts.map((product) => {
+				const offPercent = getDiscountPercent(product);
+				const qty = b2bQtyState[product.id] || 1;
+				const isOutOfStock = product.outOfStock === true;
+				const qtyLimit = getB2BQtyLimit(product.id);
+				const unit = (typeof product.unit === 'string' && product.unit.trim()) ? product.unit : '/ set';
+				return `
+					<div class="card" data-name="${product.name.toLowerCase()}">
+						<div class="off-badge">${offPercent}% OFF</div>
+						<img src="${product.image}" alt="${product.name}" onclick="openTiltCardById('${product.id}')" />
+						<div class="card-name">${product.name}</div>
+						<div class="card-price-wrap">
+							<div class="card-price-discounted">₹${product.discountedPrice}${unit}</div>
+							<div class="card-price-actual">₹${product.actualPrice}</div>
+						</div>
+						<div class="card-off">${isOutOfStock ? 'Out of stock' : (offPercent + '% off')}</div>
+						<div class="card-actions">
+							<div class="add-section" id="addSection-${product.id}">
+								<button class="add-btn" type="button" onclick="showQtyControls('${product.id}')" ${isOutOfStock ? 'disabled style="background:#d1d5db;cursor:not-allowed;"' : ''}>${isOutOfStock ? 'Out of stock' : 'Add'}</button>
+							</div>
+							<div class="qty-section" id="qtySection-${product.id}">
+								<div class="qty-box">
+									<button class="qty-btn" type="button" onclick="changeB2BQty('${product.id}', -1)">-</button>
+									<span class="qty-number" id="qtyNumber-${product.id}">${qty}</span>
+									<button class="qty-btn" type="button" onclick="changeB2BQty('${product.id}', 1)">+</button>
+								</div>
+								<button class="add-to-cart-btn" type="button" onclick="addB2BProductToCart('${product.id}')">Add to cart</button>
+							</div>
+						</div>
+					</div>
+				`;
+			}).join('');
+
+			if (noResults) noResults.style.display = visibleProducts.length ? 'none' : 'block';
+		}
+
+		let b2bTabCurveApi = null;
+
+		function initProductTabs() {
+			const tabsRoot = document.getElementById('productTabs');
+			if (!tabsRoot) return;
+
+			if (typeof initGrozoSvgTabBar === 'function') {
+				b2bTabCurveApi = initGrozoSvgTabBar({
+					navId: 'productTabs',
+					tabSelector: '.product-tab',
+					activeClass: 'active',
+					svgId: 'b2bTabSvg',
+					pathId: 'b2bTabPath',
+					gradientId: 'b2bTabCurveGradient',
+					keyFromElement: (tabEl) => tabEl.getAttribute('data-tab') || 'all',
+					onChange: (tabKey) => {
+						activeCategoryTab = tabKey || 'all';
+						renderProducts();
+						renderSuggestions(getVisibleProducts());
+					}
+				});
+				return;
+			}
+
+			const tabs = Array.from(tabsRoot.querySelectorAll('.product-tab'));
+			tabs.forEach((tabBtn) => {
+				tabBtn.addEventListener('click', () => {
+					activeCategoryTab = tabBtn.dataset.tab || 'all';
+					tabs.forEach((btn) => btn.classList.remove('active'));
+					tabBtn.classList.add('active');
+					renderProducts();
+					renderSuggestions(getVisibleProducts());
+				});
+			});
+		}
+
+		function handleB2BToggleFromB2B(isEnabled) {
+			if (isEnabled) return;
+			openB2BOffPopup();
+ 		}
+
+		function openB2BOffPopup() {
+			const popup = document.getElementById('b2bOffPopupBackdrop');
+			if (popup) popup.classList.add('active');
+		}
+
+		function closeB2BOffPopup(e) {
+			if (e && e.target !== document.getElementById('b2bOffPopupBackdrop')) return;
+			cancelSwitchOffB2B();
+		}
+
+		function cancelSwitchOffB2B() {
+			const popup = document.getElementById('b2bOffPopupBackdrop');
+			if (popup) popup.classList.remove('active');
+			const toggle = document.getElementById('b2bToggleSwitch');
+			if (toggle) toggle.checked = true;
+		}
+
+		function confirmSwitchOffB2B() {
+			const popup = document.getElementById('b2bOffPopupBackdrop');
+			if (popup) popup.classList.remove('active');
+			localStorage.setItem('grozo_mode', 'customer');
+			window.location.href = '/';
+		}
+
+		let currentB2BTrackingOrder = null;
+		let b2bTrackingMap = null;
+		let b2bPartnerMarker = null;
+		let b2bTrackingInterval = null;
+		let b2bNotificationStatusInterval = null;
+		let b2bActiveTrackingOrders = [];
+		const iconMap = {'placed':'🚀','dispatched':'🚚','on_the_way':'📍','delivered':'✅','cancelled':'❌'};
+		const b2bTrackingStatusFlow = ['pending', 'confirmed', 'dispatched', 'picked_up', 'on_the_way', 'delivered'];
+		const b2bTrackingStatusLabels = {
+			pending: 'Order Placed',
+			confirmed: 'Confirmed',
+			dispatched: 'Assigned',
+			assigned: 'Assigned',
+			picked_up: 'Picked Up',
+			on_the_way: 'On The Way',
+			delivered: 'Delivered',
+			cancelled: 'Cancelled'
+		};
+
+		function openTrackingPage() {
+			const modal = document.getElementById('b2bTrackingModalBackdrop');
+			if (!modal) return;
+			modal.classList.add('active');
+			loadB2BTrackingOrders();
+		}
+
+		function closeB2BTrackingModal(e) {
+			if (e && e.target !== e.currentTarget) return;
+			const modal = document.getElementById('b2bTrackingModalBackdrop');
+			if (modal) modal.classList.remove('active');
+			b2bActiveTrackingOrders = [];
+			currentB2BTrackingOrder = null;
+			resetB2BTrackingRuntime();
+		}
+
+		function resetB2BTrackingRuntime() {
+			if (b2bTrackingInterval) {
+				clearInterval(b2bTrackingInterval);
+				b2bTrackingInterval = null;
+			}
+			if (b2bTrackingMap) {
+				b2bTrackingMap.remove();
+				b2bTrackingMap = null;
+				b2bPartnerMarker = null;
+			}
+		}
+
+		function getB2BTrackingStepIndex(status) {
+			const idx = b2bTrackingStatusFlow.indexOf(status);
+			return idx < 0 ? 0 : idx;
+		}
+
+		function renderB2BTimeline(status) {
+			const currentIndex = getB2BTrackingStepIndex(status);
+			return `<div class="b2b-timeline">${b2bTrackingStatusFlow.map((step, idx) => {
+				const stateClass = idx < currentIndex ? 'done' : (idx === currentIndex ? 'active' : '');
+				return `<div class="b2b-step ${stateClass}">${b2bTrackingStatusLabels[step] || step}</div>`;
+			}).join('')}</div>`;
+		}
+
+		function normalizeTrackingOrders(orders) {
+			if (!Array.isArray(orders)) return [];
+			const activeStatuses = ['pending', 'confirmed', 'assigned', 'dispatched', 'picked_up', 'on_the_way'];
+			return orders.filter((order) => {
+				const mode = (order.orderMode || order.orderType || order.channel || '').toLowerCase();
+				const businessType = (order.businessType || '').toLowerCase();
+				const isB2B = mode === 'b2b' || businessType === 'b2b' || String(order.id || '').startsWith('b2b_');
+				const status = String(order.status || '').toLowerCase();
+				const isActive = activeStatuses.includes(status);
+				return isB2B && isActive;
+			}).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+		}
+
+		async function loadB2BTrackingOrders() {
+			const content = document.getElementById('b2bTrackingContent');
+			const user = getStoredUser();
+			if (!content) return;
+
+			if (!user || !user.phone) {
+				content.innerHTML = '<div class="b2b-tracking-empty">Please log in with your mobile number to track B2B orders.</div>';
+				return;
+			}
+
+			content.innerHTML = '<div class="b2b-tracking-empty">Loading your B2B orders...</div>';
+
+			try {
+				const response = await fetch('https://grozo-backend.onrender.com/api/orders/user/' + encodeURIComponent(user.phone));
+				if (!response.ok) throw new Error('Unable to fetch from backend');
+				const data = await response.json();
+				const allOrders = Array.isArray(data.orders) ? data.orders : [];
+				syncB2BOrderStatusNotifications(allOrders);
+				renderB2BTrackingOrders(normalizeTrackingOrders(allOrders));
+			} catch (error) {
+				const localOrders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+				const userOrders = localOrders.filter((order) => order.userPhone === user.phone);
+				syncB2BOrderStatusNotifications(userOrders);
+				renderB2BTrackingOrders(normalizeTrackingOrders(userOrders));
+			}
+		}
+
+		function getNotificationUserIdentifier() {
+			const user = getStoredUser();
+			return user && (user.phone || user.email) ? (user.phone || user.email) : '';
+		}
+
+		function getNotificationContext(notif) {
+			function getOrderContextById(orderId) {
+				try {
+					const orders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+					if (!Array.isArray(orders) || !orderId) return '';
+					const order = orders.find((o) => String(o && o.id) === String(orderId));
+					if (!order) return '';
+					const mode = String(order.orderMode || order.orderType || order.channel || '').toLowerCase();
+					const businessType = String(order.businessType || '').toLowerCase();
+					const isB2B = mode === 'b2b' || businessType === 'b2b' || String(order.id || '').toLowerCase().startsWith('b2b_');
+					return isB2B ? 'b2b' : 'customer';
+				} catch (err) {
+					return '';
+				}
+			}
+
+			if (notif && typeof notif.channel === 'string' && notif.channel.trim()) {
+				return notif.channel.trim().toLowerCase();
+			}
+			const orderId = String((notif && notif.orderId) || '').toLowerCase();
+			const resolved = getOrderContextById(orderId);
+			if (resolved) return resolved;
+			return orderId.startsWith('b2b_') ? 'b2b' : 'customer';
+		}
+
+		function getB2BContextNotifications(userNotifications) {
+			return (Array.isArray(userNotifications) ? userNotifications : []).filter((notif) => getNotificationContext(notif) === 'b2b');
+		}
+
+		function notifyConsumer(orderId, type, message, channel = 'b2b') {
+			try {
+				const userIdentifier = getNotificationUserIdentifier();
+				if (!userIdentifier) return;
+
+				const notifications = JSON.parse(localStorage.getItem('grozo_notifications') || '{}');
+				if (!notifications[userIdentifier]) notifications[userIdentifier] = [];
+				notifications[userIdentifier].push({
+					orderId,
+					type,
+					message,
+					channel,
+					timestamp: new Date().toLocaleString(),
+					createdAt: new Date().toISOString(),
+					read: false
+				});
+				localStorage.setItem('grozo_notifications', JSON.stringify(notifications));
+				updateNotificationBadge();
+			} catch (err) {
+				console.warn('Notification error:', err);
+			}
+		}
+
+		function clearOldNotifications() {
+			try {
+				const notifications = JSON.parse(localStorage.getItem('grozo_notifications') || '{}');
+				const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+				let hasChanges = false;
+
+				Object.keys(notifications).forEach((userIdentifier) => {
+					const before = notifications[userIdentifier].length;
+					notifications[userIdentifier] = notifications[userIdentifier].filter((notif) => {
+						const rawDate = notif.createdAt || notif.timestamp;
+						if (!rawDate) return true;
+						const parsedDate = new Date(rawDate);
+						return !Number.isNaN(parsedDate.getTime()) && parsedDate > thirtyDaysAgo;
+					});
+					if (before !== notifications[userIdentifier].length) hasChanges = true;
+				});
+
+				if (hasChanges) {
+					localStorage.setItem('grozo_notifications', JSON.stringify(notifications));
+				}
+			} catch (err) {
+				console.warn('Error clearing old notifications:', err);
+			}
+		}
+
+		function updateNotificationBadge() {
+			try {
+				const badge = document.getElementById('notificationBadge');
+				if (!badge) return;
+
+				const userIdentifier = getNotificationUserIdentifier();
+				if (!userIdentifier) {
+					badge.style.display = 'none';
+					return;
+				}
+
+				const notifications = JSON.parse(localStorage.getItem('grozo_notifications') || '{}');
+				const userNotifications = notifications[userIdentifier] || [];
+				const contextNotifications = getB2BContextNotifications(userNotifications);
+				const unreadCount = contextNotifications.filter((n) => !n.read).length;
+				badge.textContent = unreadCount;
+				badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+			} catch (err) {
+				console.warn('Badge update error:', err);
+			}
+		}
+
+		function renderB2BTrackingOrders(orders) {
+			const content = document.getElementById('b2bTrackingContent');
+			if (!content) return;
+
+			if (!orders.length) {
+				content.innerHTML = '<div class="b2b-tracking-title">B2B Order Tracking</div><div class="b2b-tracking-empty">No active B2B orders found.</div>';
+				return;
+			}
+
+			b2bActiveTrackingOrders = orders;
+
+			content.innerHTML = `
+				<div class="b2b-tracking-title">B2B Order Tracking</div>
+				<div class="b2b-order-tabs" id="b2bOrderTabs">
+					${orders.map((order, index) => `
+						<button class="b2b-order-tab ${index === 0 ? 'active' : ''}" type="button" onclick="switchB2BTrackingOrderTab(${index})">
+							Order ${index + 1}
+						</button>
+					`).join('')}
+				</div>
+				<div id="b2bOrderTrackingDetail"></div>
+			`;
+
+			switchB2BTrackingOrderTab(0);
+		}
+
+		function switchB2BTrackingOrderTab(index) {
+			if (!Array.isArray(b2bActiveTrackingOrders) || index < 0 || index >= b2bActiveTrackingOrders.length) return;
+
+			const tabs = document.querySelectorAll('#b2bOrderTabs .b2b-order-tab');
+			tabs.forEach((tab, tabIndex) => {
+				tab.classList.toggle('active', tabIndex === index);
+			});
+
+			renderB2BTrackingOrderDetail(b2bActiveTrackingOrders[index]);
+		}
+
+		function renderB2BTrackingOrderDetail(order) {
+			const detailRoot = document.getElementById('b2bOrderTrackingDetail');
+			if (!detailRoot || !order) return;
+
+			resetB2BTrackingRuntime();
+			currentB2BTrackingOrder = order;
+
+			const location = order.location || {};
+			const address = [location.flatNo, location.area, location.address, location.city, location.state, location.pincode].filter(Boolean).join(', ');
+
+			detailRoot.innerHTML = `
+				<div class="b2b-tracking-card">
+					<div class="b2b-tracking-row">
+						<div>
+							<div class="b2b-tracking-order-id">Order #${order.id}</div>
+							<div class="b2b-tracking-meta">${new Date(order.date || Date.now()).toLocaleString()}</div>
+						</div>
+						<div class="b2b-status-pill">${b2bTrackingStatusLabels[order.status] || order.status || 'Pending'}</div>
+					</div>
+					${renderB2BTimeline(order.status)}
+					<div class="b2b-track-details">
+						<div class="b2b-track-detail-row"><span class="label">Total</span><span class="value">₹${order.total || 0}</span></div>
+						<div class="b2b-track-detail-row"><span class="label">Payment</span><span class="value">${order.paymentMethod || 'Cash / UPI on delivery'}</span></div>
+						<div class="b2b-track-detail-row"><span class="label">Delivery Address</span><span class="value">${address || 'Not available'}</span></div>
+					</div>
+					<div class="b2b-map-wrap">
+						<div style="font-weight:600; font-size:14px; margin-bottom:8px;">Delivery Location</div>
+						<div id="b2bTrackingMap"></div>
+						<div id="b2bLiveUpdate" class="b2b-live-note"></div>
+					</div>
+				</div>
+			`;
+
+			setTimeout(() => {
+				initB2BTrackingMap(location.latitude, location.longitude);
+				if (['dispatched', 'assigned', 'picked_up', 'on_the_way'].includes(order.status)) {
+					startB2BPartnerTracking();
+				}
+			}, 100);
+		}
+
+		function initB2BTrackingMap(lat, lng) {
+			if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
+			if (b2bTrackingMap) {
+				b2bTrackingMap.remove();
+				b2bTrackingMap = null;
+				b2bPartnerMarker = null;
+			}
+
+			b2bTrackingMap = L.map('b2bTrackingMap').setView([lat, lng], 15);
+			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: '© OpenStreetMap contributors'
+			}).addTo(b2bTrackingMap);
+
+			L.marker([lat, lng]).addTo(b2bTrackingMap).bindPopup('Delivery address').openPopup();
+		}
+
+		function updateB2BPartnerLocation(lat, lng, name) {
+			if (!b2bTrackingMap) return;
+			if (b2bPartnerMarker) b2bTrackingMap.removeLayer(b2bPartnerMarker);
+
+			const icon = L.divIcon({ html: '<div style="font-size:22px;">🏍️</div>', className: 'b2b-partner-icon', iconSize: [28, 28], iconAnchor: [14, 14] });
+			b2bPartnerMarker = L.marker([lat, lng], { icon }).addTo(b2bTrackingMap).bindPopup(`${name || 'Delivery partner'} location`);
+		}
+
+		function startB2BPartnerTracking() {
+			if (!currentB2BTrackingOrder) return;
+			if (b2bTrackingInterval) {
+				clearInterval(b2bTrackingInterval);
+				b2bTrackingInterval = null;
+			}
+
+			const poll = async () => {
+				try {
+					const response = await fetch(`https://grozo-backend.onrender.com/api/orders/${currentB2BTrackingOrder.id}/delivery-location`);
+					if (!response.ok) return;
+					const data = await response.json();
+					if (!data || !data.location) return;
+					const location = data.location;
+					updateB2BPartnerLocation(location.latitude, location.longitude, location.name);
+					const update = document.getElementById('b2bLiveUpdate');
+					if (update && location.lastUpdated) {
+						update.textContent = `Live location updated: ${new Date(location.lastUpdated).toLocaleTimeString()}`;
+					}
+				} catch (err) {}
+			};
+
+			poll();
+			b2bTrackingInterval = setInterval(poll, 10000);
+		}
+
+		function getStoredUser() {
+			try {
+				return JSON.parse(localStorage.getItem('grozo_user') || 'null');
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function refreshUserIcon() {
+			const user = getStoredUser();
+			const loginIcon = document.getElementById('loginIcon');
+			const userAvatar = document.getElementById('userAvatar');
+			if (!loginIcon || !userAvatar) return;
+
+			if (user) {
+				if (user.picture) {
+					userAvatar.src = user.picture;
+					userAvatar.style.display = 'block';
+					loginIcon.style.display = 'none';
+				} else {
+					loginIcon.style.display = 'flex';
+					loginIcon.innerHTML = '<img src="loginuser.png" alt="Logged In">';
+					loginIcon.title = `Logged in as +91-${user.phone || ''}`;
+					userAvatar.style.display = 'none';
+				}
+			} else {
+				loginIcon.style.display = 'flex';
+				loginIcon.innerHTML = '<img src="user.png" alt="Login">';
+				loginIcon.title = 'Login';
+				userAvatar.style.display = 'none';
+			}
+		}
+
+		function handleAuthClick() {
+			const user = getStoredUser();
+			if (user) {
+				openAccountPanel();
+			} else {
+				openLoginModal();
+			}
+		}
+
+		function decodeGoogleJwt(token) {
+			try {
+				return JSON.parse(atob(token.split('.')[1]));
+			} catch (err) {
+				return null;
+			}
+		}
+
+		async function handleCredentialResponse(response) {
+			try {
+				const idToken = response && response.credential;
+				if (!idToken) {
+					alert('Google sign-in failed: no credential received.');
+					return;
+				}
+
+				const decoded = decodeGoogleJwt(idToken);
+				if (!decoded) {
+					alert('Google sign-in failed: invalid token.');
+					return;
+				}
+
+				const existing = getStoredUser() || {};
+				const user = {
+					id: existing.id || ('google_' + (decoded.sub || '')),
+					name: decoded.name || existing.name || 'Grozo User',
+					phone: existing.phone || '',
+					email: decoded.email || existing.email || '',
+					picture: decoded.picture || existing.picture || ''
+				};
+
+				localStorage.setItem('grozo_token', idToken);
+				localStorage.setItem('grozo_user', JSON.stringify(user));
+				closeLoginModal();
+				refreshUserIcon();
+				updateNotificationBadge();
+				refreshB2BStatusNotifications();
+				openAccountPanel();
+			} catch (err) {
+				alert('Google sign-in failed. Please try again.');
+			}
+		}
+
+		function initGoogle() {
+			try {
+				const CLIENT_ID = '1054365989272-e3t05dqp8k4vf3slii9ofdiujsdq7js0.apps.googleusercontent.com';
+				if (window.google && google.accounts && google.accounts.id) {
+					google.accounts.id.initialize({
+						client_id: CLIENT_ID,
+						callback: handleCredentialResponse
+					});
+					const btnContainer = document.getElementById('googleSignInButton');
+					if (btnContainer) {
+						google.accounts.id.renderButton(btnContainer, { theme: 'outline', size: 'large', width: 240 });
+					}
+					// Uncomment to show One Tap prompt automatically
+					// google.accounts.id.prompt();
+				} else {
+				// Google API not ready yet, retry after a delay
+				setTimeout(initGoogle, 500);
+				}
+			} catch (e) { console.warn('Google init error', e); }
+			try { updateHeaderAfterLogin(); } catch (e) {}
+		}
+
+		function triggerGoogleSignIn() {
+      try {
+        if (window.google && google.accounts && google.accounts.id) {
+          google.accounts.id.prompt();
+        } else {
+          alert('Google sign-in is loading. Please try again.');
+        }
+      } catch (e) {
+        alert('Unable to start Google sign-in right now.');
+      }
+    }
+
+		function openAccountPanel() {
+			const panel = document.getElementById('accountPanelBackdrop');
+			if (!panel) return;
+			panel.classList.add('active');
+			inlineNameFinalizeHandler = null;
+			setNameEditButtonState(false);
+			showAccountTab('saved');
+			loadAccountPanel();
+		}
+
+		function closeAccountPanel(e) {
+			if (e && e.target !== e.currentTarget) return;
+			const panel = document.getElementById('accountPanelBackdrop');
+			if (panel) panel.classList.remove('active');
+		}
+
+		function showAccountTab(key) {
+			const saved = document.getElementById('tab_saved');
+			const orders = document.getElementById('tab_orders');
+			const subs = document.getElementById('tab_subs');
+			const menuButtons = document.querySelectorAll('.account-menu button[data-account-tab]');
+			if (saved) saved.style.display = key === 'saved' ? 'block' : 'none';
+			if (orders) orders.style.display = key === 'orders' ? 'block' : 'none';
+			if (subs) subs.style.display = key === 'subs' ? 'block' : 'none';
+			menuButtons.forEach((button) => {
+				button.classList.toggle('active', button.getAttribute('data-account-tab') === key);
+			});
+		}
+
+		function escapeHtml(text) {
+			return String(text ?? '').replace(/[&<>'"]/g, (char) => {
+				if (char === '&') return '&amp;';
+				if (char === '<') return '&lt;';
+				if (char === '>') return '&gt;';
+				if (char === "'") return '&#39;';
+				return '&quot;';
+			});
+		}
+
+		let currentB2BOrderInfo = null;
+
+		function openB2BOrderInfoModal(orderId) {
+			const orders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+			const order = (Array.isArray(orders) ? orders : []).find((o) => String(o && o.id) === String(orderId));
+			if (!order || !isB2BOrder(order)) {
+				alert('Order details not found.');
+				return;
+			}
+
+			currentB2BOrderInfo = order;
+			const items = Array.isArray(order.items) ? order.items : [];
+			const productCount = items.reduce((acc, item) => acc + (Number(item.qty || item.quantity || 1) || 1), 0);
+
+			const subtotalFromItems = items.reduce((acc, item) => {
+				const price = Number(item.price || 0);
+				const qty = Number(item.qty || item.quantity || 1);
+				return acc + (price * qty);
+			}, 0);
+			const subtotal = Number(order.subtotal ?? subtotalFromItems);
+			const fees = order.fees || {};
+			const deliveryFee = Number(fees.delivery || order.delivery || order.deliveryFee || 0);
+			const handlingFee = Number(fees.handling || order.handling || order.handlingFee || 0);
+			const platformFee = Number(fees.platform || order.platform || order.platformFee || 0);
+			const discountAmount = Number(order.discount || 0);
+			const totalBill = Number(order.total ?? (subtotal + deliveryFee + handlingFee + platformFee - discountAmount));
+
+			const location = order.location || {};
+			const address = [location.flatNo, location.address, location.area, location.city, location.pincode].filter(Boolean).join(', ') || 'Not available';
+
+			const statusKey = String(order.status || 'pending').toLowerCase();
+			const statusLabelMap = {
+				pending: 'Pending',
+				confirmed: 'Confirmed',
+				assigned: 'Assigned',
+				dispatched: 'Dispatched',
+				picked_up: 'Picked Up',
+				on_the_way: 'On the Way',
+				delivered: 'Delivered',
+				cancelled: 'Cancelled'
+			};
+			const statusLabel = statusLabelMap[statusKey] || statusKey;
+			const statusClass = statusKey === 'delivered' ? 'delivered' : (statusKey === 'cancelled' ? 'cancelled' : '');
+
+			const productsHtml = items.length ? items.map((item) => {
+				const qty = Number(item.qty || item.quantity || 1) || 1;
+				const image = getProductImageById(item.id) || item.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22%3E%3Crect fill=%22%23f3f4f6%22 width=%2256%22 height=%2256%22/%3E%3C/svg%3E';
+				const name = item.name || item.title || item.product || 'Product';
+				const price = Number(item.price || 0);
+				const rowPrice = price * qty;
+				return `
+					<div class="order-info-product-row">
+						<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" class="order-info-product-image" />
+						<div class="order-info-product-main">
+							<div class="order-info-product-name">${escapeHtml(name)}</div>
+							<div class="order-info-product-sub">${qty} units</div>
+						</div>
+						<div class="order-info-product-price">₹${rowPrice}</div>
+					</div>
+				`;
+			}).join('') : '<div class="order-info-product-row"><div class="order-info-product-main"><div class="order-info-product-name">No products found</div></div></div>';
+
+			const orderDateValue = order.date || order.createdAt || order.updatedAt;
+			const placedAt = orderDateValue && !Number.isNaN(new Date(orderDateValue).getTime())
+				? new Date(orderDateValue).toLocaleString()
+				: 'Date unavailable';
+
+			const html = `
+				<div class="order-info-head-title">Order ID: ${escapeHtml(order.id || '')}</div>
+				<div class="order-info-head-subtitle">${productCount} product${productCount === 1 ? '' : 's'}</div>
+
+				<div class="order-info-status-wrap">
+					<div class="order-info-status-label">Status</div>
+					<div class="order-info-status-pill ${statusClass}">${escapeHtml(statusLabel)}</div>
+				</div>
+
+				<div class="order-info-products">${productsHtml}</div>
+
+				<div class="order-info-bill">
+					<div class="order-info-bill-title">Bill summary</div>
+					<div class="order-info-bill-row"><span>Item total</span><span>₹${subtotal}</span></div>
+					<div class="order-info-bill-row"><span>Delivery fee</span><span>₹${deliveryFee}</span></div>
+					<div class="order-info-bill-row"><span>Handling fee</span><span>₹${handlingFee}</span></div>
+					<div class="order-info-bill-row"><span>Platform fee</span><span>₹${platformFee}</span></div>
+					${discountAmount > 0 ? `<div class="order-info-bill-row"><span>Discount</span><span>-₹${discountAmount}</span></div>` : ''}
+					<div class="order-info-bill-row order-info-bill-total"><span>Total bill</span><span>₹${totalBill}</span></div>
+				</div>
+
+				<button class="order-info-download-btn" onclick="downloadB2BOrderInvoice()">Download Invoice/Credit Note</button>
+
+				<div class="order-info-foot">
+					<div class="order-info-foot-title">Order details</div>
+					<div class="order-info-foot-row"><span class="label">Order ID</span><span>${escapeHtml(order.id || '')}</span></div>
+					<div class="order-info-foot-row"><span class="label">Delivery address</span><span>${escapeHtml(address)}</span></div>
+					<div class="order-info-foot-row"><span class="label">Order placed at</span><span>${escapeHtml(placedAt)}</span></div>
+				</div>
+			`;
+
+			const content = document.getElementById('b2bOrderInfoModalContent');
+			if (content) content.innerHTML = html;
+
+			const backdrop = document.getElementById('b2bOrderInfoModalBackdrop');
+			if (backdrop) backdrop.classList.add('active');
+		}
+
+		function closeB2BOrderInfoModal(e) {
+			if (e && e.target !== e.currentTarget) return;
+			const backdrop = document.getElementById('b2bOrderInfoModalBackdrop');
+			if (backdrop) backdrop.classList.remove('active');
+		}
+
+		function downloadB2BOrderInvoice() {
+			if (!currentB2BOrderInfo) {
+				alert('No order selected.');
+				return;
+			}
+
+			const order = currentB2BOrderInfo;
+			const items = Array.isArray(order.items) ? order.items : [];
+			const subtotalFromItems = items.reduce((acc, item) => {
+				const price = Number(item.price || 0);
+				const qty = Number(item.qty || item.quantity || 1);
+				return acc + (price * qty);
+			}, 0);
+			const subtotal = Number(order.subtotal ?? subtotalFromItems);
+			const fees = order.fees || {};
+			const deliveryFee = Number(fees.delivery || order.delivery || order.deliveryFee || 0);
+			const handlingFee = Number(fees.handling || order.handling || order.handlingFee || 0);
+			const platformFee = Number(fees.platform || order.platform || order.platformFee || 0);
+			const discountAmount = Number(order.discount || 0);
+			const totalBill = Number(order.total ?? (subtotal + deliveryFee + handlingFee + platformFee - discountAmount));
+			const location = order.location || {};
+			const address = [location.flatNo, location.address, location.area, location.city, location.pincode].filter(Boolean).join(', ') || 'Not available';
+
+			const statusKey = String(order.status || 'pending').toLowerCase();
+			const statusLabelMap = {
+				pending: 'Pending',
+				confirmed: 'Confirmed',
+				assigned: 'Assigned',
+				dispatched: 'Dispatched',
+				picked_up: 'Picked Up',
+				on_the_way: 'On the Way',
+				delivered: 'Delivered',
+				cancelled: 'Cancelled'
+			};
+			const statusLabel = statusLabelMap[statusKey] || statusKey;
+
+			const orderDateValue = order.date || order.createdAt || order.updatedAt;
+			const placedAt = orderDateValue && !Number.isNaN(new Date(orderDateValue).getTime())
+				? new Date(orderDateValue).toLocaleString()
+				: 'Date unavailable';
+
+			const itemLines = items.map((item) => {
+				const name = item.name || item.title || item.product || 'Product';
+				const qty = Number(item.qty || item.quantity || 1) || 1;
+				const price = Number(item.price || 0);
+				return `- ${name} (${qty} units) : Rs.${price * qty}`;
+			}).join('\n');
+
+			const invoiceText = [
+				'Grozo B2B Invoice/Credit Note',
+				'------------------------------',
+				`Order ID: ${order.id || ''}`,
+				`Status: ${statusLabel}`,
+				`Order placed at: ${placedAt}`,
+				'',
+				'Products:',
+				itemLines || '- No products',
+				'',
+				'Bill Summary:',
+				`Item total: Rs.${subtotal}`,
+				`Delivery fee: Rs.${deliveryFee}`,
+				`Handling fee: Rs.${handlingFee}`,
+				`Platform fee: Rs.${platformFee}`,
+				...(discountAmount > 0 ? [`Discount: -Rs.${discountAmount}`] : []),
+				`Total bill: Rs.${totalBill}`,
+				'',
+				'Order Details:',
+				`Delivery address: ${address}`
+			].join('\n');
+
+			const blob = new Blob([invoiceText], { type: 'text/plain;charset=utf-8' });
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = `invoice-${order.id || Date.now()}.txt`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(link.href);
+		}
+
+		function loadAccountPanel() {
+			const user = getStoredUser() || {};
+			const accountName = document.getElementById('accountName');
+			const accountPhone = document.getElementById('accountPhone');
+			const accountEmailLabel = document.getElementById('accountEmailText');
+			const googleSignInBtn = document.getElementById('googleSignInButton');
+			const savedEl = document.getElementById('accountSavedLocations');
+			const ordersEl = document.getElementById('accountOrdersInfo');
+			const subsEl = document.getElementById('accountSubsInfo');
+
+			if (accountName) accountName.textContent = user.name || 'Grozo User';
+			if (accountPhone) accountPhone.textContent = user.phone ? `+91-${user.phone}` : '+91-xxxxxxxxxx';
+
+			if (accountEmailLabel) {
+				accountEmailLabel.textContent = user.email ? `email - ${user.email}` : 'email -';
+			}
+			if (googleSignInBtn) {
+				googleSignInBtn.style.display = user.email ? 'none' : 'inline-flex';
+			}
+
+			if (savedEl) {
+				try {
+					const savedLocations = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+					if (!savedLocations.length) {
+						savedEl.innerHTML = '<div class="account-locations-container"><div class="account-location-row">📍 No saved locations</div></div>';
+					} else {
+						const locationRows = savedLocations.map((loc) => {
+							const name = loc.title || loc.address || loc.area || loc.city || 'Saved location';
+							return `<div class="account-location-row">📍 ${name}</div>`;
+						}).join('');
+						savedEl.innerHTML = `<div class="account-locations-container">${locationRows}</div>`;
+					}
+				} catch (err) {
+					savedEl.innerHTML = '<div class="account-locations-container"><div class="account-location-row">📍 No saved locations</div></div>';
+				}
+			}
+
+			if (ordersEl) {
+				try {
+					const orders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+					const userPhone = String(user.phone || '').trim();
+					const userEmail = String(user.email || '').trim().toLowerCase();
+					const b2bOrders = (Array.isArray(orders) ? orders : []).filter((order) => {
+						if (!order || !isB2BOrder(order)) return false;
+						const statusKey = String(order.status || '').trim().toLowerCase();
+						if (statusKey !== 'delivered' && statusKey !== 'cancelled') return false;
+						const orderPhone = String(order.userPhone || order.phone || '').trim();
+						const orderEmail = String(order.userEmail || order.email || '').trim().toLowerCase();
+						if (!userPhone && !userEmail) return true;
+						return (userPhone && orderPhone === userPhone) || (userEmail && orderEmail === userEmail);
+					});
+
+					if (!b2bOrders.length) {
+						ordersEl.textContent = 'No past B2B orders';
+					} else {
+						const b2bProductCount = b2bOrders.reduce((total, order) => {
+							const items = Array.isArray(order.items) ? order.items : [];
+							const orderQty = items.reduce((itemTotal, item) => {
+								const qty = Number(item && item.qty);
+								return itemTotal + (Number.isFinite(qty) && qty > 0 ? qty : 1);
+							}, 0);
+							return total + orderQty;
+						}, 0);
+
+						const sortedOrders = [...b2bOrders].sort((a, b) => {
+							const aTime = new Date(a.date || a.createdAt || a.updatedAt || 0).getTime();
+							const bTime = new Date(b.date || b.createdAt || b.updatedAt || 0).getTime();
+							return bTime - aTime;
+						});
+
+						const statusMap = {
+							pending: 'Pending',
+							confirmed: 'Confirmed',
+							assigned: 'Assigned',
+							dispatched: 'Dispatched',
+							picked_up: 'Picked Up',
+							on_the_way: 'On the Way',
+							delivered: 'Delivered',
+							cancelled: 'Cancelled'
+						};
+
+						const ordersHtml = sortedOrders.map((order) => {
+							const items = Array.isArray(order.items) ? order.items : [];
+							const statusKey = String(order.status || 'pending').toLowerCase();
+							const statusLabel = statusMap[statusKey] || statusKey;
+							const statusClass = statusKey === 'delivered' ? 'delivered' : (statusKey === 'cancelled' ? 'cancelled' : '');
+							const totalValue = Number(order.total);
+							const totalText = Number.isFinite(totalValue) ? Math.round(totalValue) : (order.total || order.subtotal || 'N/A');
+							const orderDateValue = order.date || order.createdAt || order.updatedAt;
+							const placedAt = orderDateValue && !Number.isNaN(new Date(orderDateValue).getTime())
+								? new Date(orderDateValue).toLocaleString()
+								: 'Date unavailable';
+							const safeOrderId = escapeHtml(order.id || 'B2B Order');
+							const safeStatusLabel = escapeHtml(statusLabel);
+							const safePlacedAt = escapeHtml(placedAt);
+							const productImages = items
+								.map((item) => getProductImageById(item && item.id) || (item && item.image) || '')
+								.filter(Boolean)
+								.slice(0, 4);
+							const galleryHtml = productImages.length
+								? `<div class="products-gallery">${productImages.map((img) => `<img src="${img}" alt="product" class="product-thumb" />`).join('')}</div>`
+								: '';
+							const safeOrderIdForBtn = String(order.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+							return `
+								<div class="past-order-card">
+									<div class="card-header">
+										<div>
+											<div class="card-title">${safeOrderId}</div>
+											<div class="card-status ${statusClass}">${safeStatusLabel}</div>
+										</div>
+										<div class="card-total">₹${totalText}</div>
+									</div>
+									<div class="card-subtitle">Placed at ${safePlacedAt}</div>
+									${galleryHtml}
+									<button class="view-details-btn" onclick="openB2BOrderInfoModal('${safeOrderIdForBtn}')">View More Information</button>
+								</div>
+							`;
+						}).join('');
+
+						ordersEl.innerHTML = `
+							<div class="account-past-orders-container">${ordersHtml}</div>
+						`;
+					}
+				} catch (err) {
+					ordersEl.textContent = 'No past B2B orders';
+				}
+			}
+
+			if (subsEl) {
+				try {
+					const subs = JSON.parse(localStorage.getItem('grozo_subs') || 'null');
+					subsEl.textContent = subs ? 'Subscription active' : 'No active subscriptions';
+				} catch (err) {
+					subsEl.textContent = 'No active subscriptions';
+				}
+			}
+		}
+
+		let inlineNameFinalizeHandler = null;
+
+		function setNameEditButtonState(isEditing) {
+			const btn = document.getElementById('nameEditToggleBtn');
+			if (!btn) return;
+			btn.textContent = isEditing ? '✔' : '🖋';
+			btn.title = isEditing ? 'Save Name' : 'Edit Name';
+			btn.setAttribute('aria-label', isEditing ? 'Save Name' : 'Edit Name');
+		}
+
+		function saveInlineProfileName(nameValue) {
+			const name = (nameValue || '').trim();
+			const user = getStoredUser() || {};
+			user.name = name || user.name || 'Grozo User';
+			localStorage.setItem('grozo_user', JSON.stringify(user));
+			refreshUserIcon();
+			loadAccountPanel();
+		}
+
+		function toggleInlineNameEdit() {
+			const nameEl = document.getElementById('accountName');
+			if (!nameEl) return;
+			if (nameEl.querySelector('input')) {
+				if (typeof inlineNameFinalizeHandler === 'function') inlineNameFinalizeHandler(true);
+				return;
+			}
+			startInlineNameEdit();
+		}
+
+		function startInlineNameEdit() {
+			const nameEl = document.getElementById('accountName');
+			if (!nameEl) return;
+			if (nameEl.querySelector('input')) return;
+
+			const currentName = (nameEl.textContent || '').trim();
+			const input = document.createElement('input');
+			input.type = 'text';
+			input.maxLength = 40;
+			input.className = 'account-name-edit-input';
+			input.value = currentName === 'Guest' ? '' : currentName;
+
+			let isFinalized = false;
+			const finalize = (save) => {
+				if (isFinalized) return;
+				isFinalized = true;
+				inlineNameFinalizeHandler = null;
+				setNameEditButtonState(false);
+				if (save) saveInlineProfileName(input.value);
+				else loadAccountPanel();
+			};
+
+			inlineNameFinalizeHandler = finalize;
+			setNameEditButtonState(true);
+
+			nameEl.textContent = '';
+			nameEl.appendChild(input);
+			input.focus();
+			input.select();
+
+			input.addEventListener('keydown', (event) => {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					finalize(true);
+				}
+				if (event.key === 'Escape') {
+					event.preventDefault();
+					finalize(false);
+				}
+			});
+		}
+
+		function logoutUser() {
+			localStorage.removeItem('grozo_user');
+			closeAccountPanel();
+			refreshUserIcon();
+			updateNotificationBadge();
+			alert('Logged out successfully');
+		}
+
+		function loadSavedLocations() {
+			const savedLocs = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+			const section = document.getElementById('savedLocationsSection');
+			const list = document.getElementById('savedLocationsList');
+			if (!section || !list) return;
+			if (!savedLocs.length) {
+				section.style.display = 'none';
+				return;
+			}
+			section.style.display = 'block';
+			list.innerHTML = '';
+			savedLocs.forEach((loc, index) => {
+				const card = document.createElement('div');
+				card.className = 'saved-location-card';
+				const title = loc.title || `Saved Location ${index + 1}`;
+				const address = `${loc.flatNo ? `${loc.flatNo}, ` : ''}${loc.area ? `${loc.area}, ` : ''}${loc.address || ''}`;
+				const cityState = `${loc.city || ''}, ${loc.state || ''}`;
+				card.innerHTML = `
+					<div class="saved-location-card-title">${title}</div>
+					<div class="saved-location-card-address">${address}${address && cityState ? '<br>' : ''}${cityState}</div>
+					<div class="saved-location-card-actions">
+						<button class="btn-use-location" onclick="useSavedLocation(${index})">Use</button>
+						<button class="btn-delete-location" onclick="deleteSavedLocation(${index})">Delete</button>
+					</div>
+				`;
+				list.appendChild(card);
+			});
+
+			try {
+				const withCoords = savedLocs.filter((loc) => loc.latitude && loc.longitude);
+				const mapContainer = document.getElementById('savedLocationsMap');
+				if (!mapContainer) return;
+				if (!withCoords.length) {
+					mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">No map data available for saved locations</div>';
+					return;
+				}
+				if (window.savedLocationsMapInstance) window.savedLocationsMapInstance.remove();
+				const first = withCoords[0];
+				const map = L.map('savedLocationsMap').setView([first.latitude, first.longitude], 12);
+				window.savedLocationsMapInstance = map;
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
+				withCoords.forEach((loc, idx) => {
+					L.marker([loc.latitude, loc.longitude]).addTo(map).bindPopup(`<strong>${loc.title || `Location ${idx + 1}`}</strong>`);
+				});
+			} catch (err) {
+				console.warn('Saved locations map render failed:', err);
+			}
+		}
+
+		async function useSavedLocation(index) {
+			const savedLocs = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+			if (index < 0 || index >= savedLocs.length) return;
+			const selected = savedLocs[index];
+			const nearestStore = await syncNearestStoreForLocation(selected, { persistLocation: true });
+			const fullLocation = `${selected.flatNo ? `${selected.flatNo}, ` : ''}${selected.area ? `${selected.area}, ` : ''}${selected.address || ''}, ${selected.city || ''}, ${selected.state || ''} ${selected.pincode || ''}`;
+			const locationText = document.getElementById('locationText');
+			if (locationText) locationText.textContent = fullLocation;
+			try { await fetchB2BConfigFromBackend(); } catch (e) {}
+			loadB2BProductDataByLocation();
+			refreshB2BCartPricesForCurrentLocation();
+			clearB2BPromoOnLocationChange();
+			sessionStorage.removeItem('grozo_confirmed_location_b2b');
+			renderProducts();
+			renderSuggestions([]);
+			renderCartPage();
+			closeLocationModal();
+			const storeInfo = nearestStore && nearestStore.name ? `\n\nNearest Store: ${nearestStore.name}` : '';
+			alert('Location set successfully!' + storeInfo);
+		}
+
+		function deleteSavedLocation(index) {
+			const savedLocs = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+			savedLocs.splice(index, 1);
+			localStorage.setItem('savedLocations', JSON.stringify(savedLocs));
+			loadSavedLocations();
+		}
+
+		function selectLocation() {
+			const modal = document.getElementById('locationModalBackdrop');
+			if (modal) modal.classList.add('active');
+			loadSavedLocations();
+		}
+
+		function closeLocationModal(e) {
+			if (e && e.target !== e.currentTarget) return;
+			const modal = document.getElementById('locationModalBackdrop');
+			if (modal) modal.classList.remove('active');
+		}
+
+		function toggleAddAddressPanel() {
+			const backdrop = document.getElementById('addAddressPanelBackdrop');
+			if (!backdrop) return;
+			backdrop.classList.toggle('active');
+			if (backdrop.classList.contains('active')) {
+				resetLocationSelection();
+				['addressLabel', 'addressInput', 'flatNo', 'area', 'pincode', 'state', 'district', 'city'].forEach((id) => {
+					const el = document.getElementById(id);
+					if (el) el.value = '';
+				});
+			}
+		}
+
+		function closeAddAddressPanel(event) {
+			if (event && event.target && event.target.id && event.target.id !== 'addAddressPanelBackdrop') return;
+			const backdrop = document.getElementById('addAddressPanelBackdrop');
+			if (backdrop) backdrop.classList.remove('active');
+		}
+
+		function showLocationMapWithPin(latitude, longitude, options = {}) {
+			const mapContainer = document.getElementById('mapContainer');
+			const selectLocationBtn = document.getElementById('selectLocationBtn');
+			const status = document.getElementById('geoStatus');
+			if (!mapContainer || !selectLocationBtn) return;
+			window.currentMapLat = latitude;
+			window.currentMapLon = longitude;
+			mapContainer.classList.add('active');
+			selectLocationBtn.style.display = 'block';
+			if (!window.currentMap) {
+				window.currentMap = L.map(mapContainer).setView([latitude, longitude], options.zoom || 16);
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(window.currentMap);
+			} else {
+				window.currentMap.setView([latitude, longitude], options.zoom || 16);
+				window.currentMap.invalidateSize();
+			}
+			window.currentMap.off('moveend');
+			window.currentMap.on('moveend', function () {
+				const center = window.currentMap.getCenter();
+				window.currentMapLat = center.lat;
+				window.currentMapLon = center.lng;
+			});
+			if (status && options.statusText) status.textContent = options.statusText;
+		}
+
+		function enableGeolocation() {
+			const btn = document.getElementById('enableGeoBtn');
+			const status = document.getElementById('geoStatus');
+			if (!btn || !status) return;
+			btn.disabled = true;
+			btn.textContent = 'Getting location...';
+			if (!navigator.geolocation) {
+				status.textContent = 'Geolocation not supported';
+				btn.disabled = false;
+				btn.textContent = 'Enable';
+				return;
+			}
+			navigator.geolocation.getCurrentPosition(
+				(pos) => {
+					const { latitude, longitude } = pos.coords;
+					btn.textContent = 'Location Enabled';
+					showLocationMapWithPin(latitude, longitude, { zoom: 16, statusText: `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+					reverseGeocodeLocation(latitude, longitude);
+				},
+				() => {
+					status.textContent = 'Permission denied or location unavailable';
+					btn.disabled = false;
+					btn.textContent = 'Enable';
+				}
+			);
+		}
+
+		function openManualLocationPicker() {
+			showLocationMapWithPin(20.5937, 78.9629, { zoom: 5, statusText: 'Move map to your location and select.' });
+		}
+
+		function resetLocationSelection() {
+			const status = document.getElementById('geoStatus');
+			const mapContainer = document.getElementById('mapContainer');
+			const selectBtn = document.getElementById('selectLocationBtn');
+			const enableBtn = document.getElementById('enableGeoBtn');
+			window.currentMapLat = null;
+			window.currentMapLon = null;
+			if (window.currentMap) {
+				window.currentMap.remove();
+				window.currentMap = null;
+			}
+			if (mapContainer) { mapContainer.classList.remove('active'); mapContainer.innerHTML = ''; }
+			if (selectBtn) selectBtn.style.display = 'none';
+			if (status) status.textContent = '';
+			if (enableBtn) { enableBtn.disabled = false; enableBtn.textContent = 'Enable'; }
+		}
+
+		function reverseGeocodeLocation(lat, lon) {
+			const status = document.getElementById('geoStatus');
+			const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&addressdetails=1`;
+			if (status) status.textContent = 'Resolving address...';
+			return fetch(url, { headers: { Accept: 'application/json' } })
+				.then((res) => res.json())
+				.then((data) => {
+					const a = data.address || {};
+					const road = a.road || a.neighbourhood || a.suburb || '';
+					const city = a.city || a.town || a.village || '';
+					const state = a.state || '';
+					const district = a.county || '';
+					const postcode = a.postcode || '';
+					const addressInput = document.getElementById('addressInput');
+					const stateInput = document.getElementById('state');
+					const districtInput = document.getElementById('district');
+					const cityInput = document.getElementById('city');
+					const pinInput = document.getElementById('pincode');
+					if (addressInput) addressInput.value = road || city;
+					if (stateInput) stateInput.value = state;
+					if (districtInput) districtInput.value = district;
+					if (cityInput) cityInput.value = city;
+					if (pinInput && postcode) pinInput.value = postcode;
+					if (status) status.textContent = 'Address resolved';
+				});
+		}
+
+		function autoFillLocationByPincode() {
+			const pinInput = document.getElementById('pincode');
+			if (!pinInput) return;
+			const pincode = pinInput.value.trim();
+			if (pincode.length !== 6) return;
+			const match = pincodeStateMap[pincode];
+			if (!match) return;
+			const stateField = document.getElementById('state');
+			const districtField = document.getElementById('district');
+			const cityField = document.getElementById('city');
+			if (stateField) stateField.value = match.state;
+			if (districtField) districtField.value = match.district;
+			if (cityField) cityField.value = match.city;
+		}
+
+		function selectLocationFromMap() {
+			if (typeof window.currentMapLat !== 'number' || typeof window.currentMapLon !== 'number') {
+				alert('Please open the map first');
+				return;
+			}
+			reverseGeocodeLocation(window.currentMapLat, window.currentMapLon)
+				.then(() => {
+					autoFillLocationByPincode();
+					const status = document.getElementById('geoStatus');
+					if (status) status.textContent = 'Location confirmed. Complete address details below.';
+					setTimeout(() => {
+						const panel = document.querySelector('.add-address-panel');
+						if (panel) panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
+					}, 300);
+				})
+				.catch(() => {
+					const status = document.getElementById('geoStatus');
+					if (status) status.textContent = 'Could not auto-fill address from map location';
+				});
+		}
+
+		async function saveLocation() {
+			const address = document.getElementById('addressInput').value.trim();
+			const addressLabel = document.getElementById('addressLabel').value.trim();
+			const flatNo = document.getElementById('flatNo').value.trim();
+			const area = document.getElementById('area').value.trim();
+			const pincode = document.getElementById('pincode').value.trim();
+			const state = document.getElementById('state').value.trim();
+			const district = document.getElementById('district').value.trim();
+			const city = document.getElementById('city').value.trim();
+			if (!window.currentMapLat || !window.currentMapLon || !flatNo) {
+				alert('Please set location and Flat No.');
+				return;
+			}
+			const data = {
+				title: addressLabel || area || city || 'B2B Location',
+				addressLabel,
+				address,
+				flatNo,
+				area,
+				pincode,
+				state,
+				district,
+				city,
+				latitude: window.currentMapLat,
+				longitude: window.currentMapLon,
+				savedAt: new Date().toLocaleString()
+			};
+			const saved = JSON.parse(localStorage.getItem('savedLocations') || '[]');
+			saved.push(data);
+			localStorage.setItem('savedLocations', JSON.stringify(saved));
+			const nearestStore = await syncNearestStoreForLocation(data, { persistLocation: true });
+			const locationText = document.getElementById('locationText');
+			if (locationText) locationText.textContent = `${flatNo ? `${flatNo}, ` : ''}${area ? `${area}, ` : ''}${address}, ${city}, ${state} - ${pincode}`;
+			try { await fetchB2BConfigFromBackend(); } catch (e) {}
+			loadB2BProductDataByLocation();
+			refreshB2BCartPricesForCurrentLocation();
+			clearB2BPromoOnLocationChange();
+			sessionStorage.removeItem('grozo_confirmed_location_b2b');
+			renderProducts();
+			renderSuggestions([]);
+			renderCartPage();
+			closeAddAddressPanel();
+			closeLocationModal();
+			const storeInfo = nearestStore && nearestStore.name ? `\n\nNearest Store: ${nearestStore.name}` : '';
+			alert('Location saved successfully!' + storeInfo);
+		}
+
+		function openCartPage() {
+			const backdrop = document.getElementById('cartPageBackdrop');
+			if (!backdrop) return;
+			backdrop.classList.add('active');
+			try {
+				const savedReceiverPhone = sessionStorage.getItem('grozo_receiver_phone_b2b') || '';
+				const mobileInput = document.getElementById('mobileNumberInputB2B');
+				if (mobileInput && savedReceiverPhone) {
+					mobileInput.value = String(savedReceiverPhone).replace(/^\+91/, '');
+				}
+			} catch (e) {}
+			renderCartPage();
+			document.body.style.overflow = 'hidden';
+			updateCartBadge();
+		}
+
+		function closeCartPage(e) {
+			if (e && e.target && e.target !== document.getElementById('cartPageBackdrop')) return;
+			const backdrop = document.getElementById('cartPageBackdrop');
+			if (!backdrop) return;
+			backdrop.classList.remove('active');
+			document.body.style.overflow = '';
+		}
+
+		function showQtyControls(productId) {
+			if (isB2BProductOutOfStock(productId)) {
+				alert('Item is out of stock');
+				return;
+			}
+			const qtyLimit = getB2BQtyLimit(productId);
+			const selectedQty = b2bQtyState[productId] || 1;
+			b2bQtyState[productId] = qtyLimit ? Math.min(selectedQty, qtyLimit) : selectedQty;
+			const addSection = document.getElementById(`addSection-${productId}`);
+			const qtySection = document.getElementById(`qtySection-${productId}`);
+			const qtyNumber = document.getElementById(`qtyNumber-${productId}`);
+			if (qtyNumber) qtyNumber.textContent = b2bQtyState[productId];
+			if (addSection) addSection.style.display = 'none';
+			if (qtySection) qtySection.style.display = 'block';
+		}
+
+		function changeB2BQty(productId, delta) {
+			const currentQty = b2bQtyState[productId] || 1;
+			const nextQty = currentQty + delta;
+			const qtyLimit = getB2BQtyLimit(productId);
+			const maxQty = qtyLimit || 20;
+			if (nextQty < 1) {
+				b2bQtyState[productId] = 1;
+				const addSection = document.getElementById(`addSection-${productId}`);
+				const qtySection = document.getElementById(`qtySection-${productId}`);
+				if (qtySection) qtySection.style.display = 'none';
+				if (addSection) addSection.style.display = 'block';
+				return;
+			}
+			if (nextQty > maxQty) {
+				alert(qtyLimit ? `Maximum allowed quantity for this product is ${qtyLimit}.` : 'Maximum allowed quantity is 20.');
+			}
+			b2bQtyState[productId] = Math.min(maxQty, nextQty);
+			const qtyNumber = document.getElementById(`qtyNumber-${productId}`);
+			if (qtyNumber) qtyNumber.textContent = b2bQtyState[productId];
+		}
+
+		function getCart() {
+			return JSON.parse(localStorage.getItem('grozo_cart_b2b') || '[]');
+		}
+
+		function saveCart(cart) {
+			localStorage.setItem('grozo_cart_b2b', JSON.stringify(cart));
+		}
+
+		function refreshB2BCartPricesForCurrentLocation() {
+			const cart = getCart();
+			if (!Array.isArray(cart) || !cart.length) return;
+
+			let changed = false;
+			const updated = cart.map((item) => {
+				const product = b2bProducts.find((p) => p.id === item.id);
+				if (!product) return item;
+
+				const next = { ...item };
+				const nextPrice = Number(product.discountedPrice) || 0;
+				if ((Number(item.price) || 0) !== nextPrice) {
+					next.price = nextPrice;
+					changed = true;
+				}
+				if (item.name !== product.name) {
+					next.name = product.name;
+					changed = true;
+				}
+				if ((item.image || '') !== (product.image || '')) {
+					next.image = product.image || '';
+					changed = true;
+				}
+				const productUnit = (typeof product.unit === 'string' && product.unit.trim()) ? product.unit : '/ set';
+				if ((item.unit || '') !== productUnit) {
+					next.unit = productUnit;
+					changed = true;
+				}
+				return next;
+			});
+
+			if (changed) saveCart(updated);
+		}
+
+		function getAvailableB2BPromos() {
+			// Only return B2B-specific promos. Never fall back to B2C promos.
+			try {
+				const b2bLocationPromos = JSON.parse(localStorage.getItem(getB2BLocationKey('grozo_b2b_admin_promos')) || 'null');
+				if (Array.isArray(b2bLocationPromos) && b2bLocationPromos.length) return b2bLocationPromos;
+				const b2bFallbackPromos = JSON.parse(localStorage.getItem('grozo_b2b_admin_promos') || 'null');
+				if (Array.isArray(b2bFallbackPromos) && b2bFallbackPromos.length) return b2bFallbackPromos;
+			} catch (err) {}
+			return [];
+		}
+
+		function getB2BFees() {
+			try {
+				const locationFees = JSON.parse(localStorage.getItem(getB2BLocationKey('grozo_b2b_admin_fees')) || 'null');
+				if (locationFees && typeof locationFees === 'object') {
+					return {
+						delivery: Number(locationFees.delivery) || 0,
+						handling: Number(locationFees.handling) || 0,
+						platform: Number(locationFees.platform) || 0
+					};
+				}
+
+				const fallbackFees = JSON.parse(localStorage.getItem('grozo_b2b_admin_fees') || 'null');
+				if (fallbackFees && typeof fallbackFees === 'object') {
+					return {
+						delivery: Number(fallbackFees.delivery) || 0,
+						handling: Number(fallbackFees.handling) || 0,
+						platform: Number(fallbackFees.platform) || 0
+					};
+				}
+
+				const locationB2CFees = JSON.parse(localStorage.getItem(getB2BLocationKey('grozo_admin_fees')) || 'null');
+				if (locationB2CFees && typeof locationB2CFees === 'object') {
+					return {
+						delivery: Number(locationB2CFees.delivery) || 0,
+						handling: Number(locationB2CFees.handling) || 0,
+						platform: Number(locationB2CFees.platform) || 0
+					};
+				}
+
+				const b2cFallbackFees = JSON.parse(localStorage.getItem('grozo_admin_fees') || 'null');
+				if (b2cFallbackFees && typeof b2cFallbackFees === 'object') {
+					return {
+						delivery: Number(b2cFallbackFees.delivery) || 0,
+						handling: Number(b2cFallbackFees.handling) || 0,
+						platform: Number(b2cFallbackFees.platform) || 0
+					};
+				}
+			} catch (err) {}
+
+			return { delivery: 0, handling: 0, platform: 0 };
+		}
+
+		function calculateB2BCartTotals(cart, promoObj) {
+			const subtotal = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
+			const productSavings = (Array.isArray(cart) ? cart : []).reduce((sum, item) => {
+				const catalogItem = b2bProducts.find((p) => p.id === item.id);
+				const actual = Number(catalogItem && catalogItem.actualPrice) || Number(item.price) || 0;
+				const discounted = Number(item.price) || 0;
+				const perItemSave = Math.max(0, actual - discounted);
+				return sum + (perItemSave * (item.qty || 0));
+			}, 0);
+			const fees = getB2BFees();
+			let delivery = Number(fees.delivery) || 0;
+			const originalDelivery = delivery;
+			const handling = Number(fees.handling) || 0;
+			const platform = Number(fees.platform) || 0;
+			let discount = 0;
+			const promoType = String((promoObj && promoObj.type) || '').toLowerCase();
+
+			try {
+				if (promoObj && promoObj.code) {
+					const min = Number(promoObj.min) || 0;
+					const value = Number(promoObj.value) || 0;
+					const cap = Number(promoObj.cap) || 0;
+					if (subtotal >= min) {
+						if (promoType === 'percent' || promoType === 'percentage') discount = (subtotal * value) / 100;
+						else if (promoType === 'flat' || promoType === 'fixed') discount = value;
+						else if (promoType === 'free-delivery') delivery = 0;
+						if (cap > 0) discount = Math.min(discount, cap);
+						discount = Math.min(discount, subtotal);
+					}
+				}
+			} catch (e) {}
+
+			const gross = subtotal + delivery + handling + platform;
+			if (promoType === 'free-order' && promoObj && promoObj.code) {
+				discount = gross;
+			}
+
+			const final = Math.max(0, gross - discount);
+			const promoSavings = Math.max(0, discount + (originalDelivery - delivery));
+			const saved = Math.max(0, productSavings + promoSavings);
+			return {
+				subtotal,
+				delivery,
+				handling,
+				platform,
+				discount,
+				final,
+				saved
+			};
+		}
+
+		function getProductImageById(id) {
+			const found = b2bProducts.find((product) => product.id === id);
+			return found ? found.image : '';
+		}
+
+		function updateCartBadge() {
+			const cart = getCart();
+			const total = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+			const badge = document.getElementById('cartCount');
+			if (badge) badge.textContent = total;
+		}
+
+		function addToCart(item, qty) {
+			const cart = getCart();
+			const existing = cart.find((cartItem) => cartItem.id === item.id);
+			if (existing) {
+				existing.qty += qty;
+			} else {
+				cart.push({ ...item, qty });
+			}
+			saveCart(cart);
+			updateCartBadge();
+		}
+
+		function updateQty(productId, delta) {
+			const cart = getCart();
+			const index = cart.findIndex((item) => item.id === productId);
+			if (index === -1) return;
+
+			const qtyLimit = getB2BQtyLimit(productId);
+			const nextQty = (cart[index].qty || 0) + delta;
+			if (delta > 0 && qtyLimit && nextQty > qtyLimit) {
+				alert(`Maximum allowed quantity for this product is ${qtyLimit}.`);
+				return;
+			}
+
+			cart[index].qty = nextQty;
+			if (cart[index].qty <= 0) cart.splice(index, 1);
+			saveCart(cart);
+			updateCartBadge();
+		}
+
+		function renderCartPage() {
+			const cart = getCart();
+			const isUnserviceableCart = document.body.classList.contains('unserviceable-mode');
+			const listEl = document.getElementById('cartItemsList');
+			const placeBtn = document.getElementById('placeB2BOrderBtn');
+			const cartPage = document.querySelector('#cartPageBackdrop .cart-page');
+			const slotLabel = document.getElementById('deliverySlotTextB2B');
+			const subtotalEl = document.getElementById('cartSubtotal');
+			const deliveryEl = document.getElementById('cartDelivery');
+			const handlingEl = document.getElementById('cartHandling');
+			const platformEl = document.getElementById('cartPlatform');
+			const discountEl = document.getElementById('cartDiscount');
+			const discountRow = document.getElementById('cartDiscountRow');
+			const promoMsg = document.getElementById('promoMessageB2B');
+			const finalEl = document.getElementById('cartFinal');
+			const savedEl = document.getElementById('savedRupees');
+			const isLocationConfirmed = isB2BLocationConfirmed();
+			if (!listEl) return;
+			listEl.innerHTML = '';
+			let hasOutOfStockItems = false;
+			const overQtyLimitItems = getB2BOverQtyLimitCartItems(cart);
+			const overQtyLimitById = overQtyLimitItems.reduce((acc, item) => {
+				acc[item.id] = item.areaQtyLimit;
+				return acc;
+			}, {});
+
+			if (!cart.length) {
+				if (cartPage) cartPage.classList.add('empty-cart-mode');
+				sessionStorage.removeItem('grozo_delivery_slot_b2b');
+				sessionStorage.removeItem('grozo_confirmed_location_b2b');
+				listEl.innerHTML = `
+					<div class="empty-cart-wrap">
+						<img src="empty-cart.png" alt="Empty Cart" class="empty-cart-image" />
+						<button type="button" class="empty-cart-continue-btn" onclick="closeCartPage()">Continue Shopping</button>
+					</div>
+				`;
+				if (placeBtn) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Place Order';
+				}
+				if (slotLabel) slotLabel.textContent = '- Not selected';
+				if (subtotalEl) subtotalEl.textContent = '₹0';
+				if (deliveryEl) deliveryEl.textContent = '₹0';
+				if (handlingEl) handlingEl.textContent = '₹0';
+				if (platformEl) platformEl.textContent = '₹0';
+				if (discountEl) discountEl.textContent = '-₹0';
+				if (discountRow) discountRow.style.display = 'none';
+				if (promoMsg) promoMsg.innerText = '';
+				if (finalEl) finalEl.textContent = '₹0';
+				if (savedEl) savedEl.textContent = '₹0';
+				renderB2BLocationChecklist();
+				return;
+			}
+
+			if (cartPage) cartPage.classList.remove('empty-cart-mode');
+
+			cart.forEach((item) => {
+				const matchingProduct = b2bProducts.find((product) => product.id === item.id);
+				const isOutOfStock = !!(matchingProduct && matchingProduct.outOfStock === true);
+				const overQtyLimit = typeof overQtyLimitById[item.id] === 'number';
+				if (isOutOfStock) hasOutOfStockItems = true;
+
+				const row = document.createElement('div');
+				row.className = 'cart-item';
+
+				const img = document.createElement('img');
+				img.src = getProductImageById(item.id) || item.image || '';
+				img.alt = item.name;
+
+				const details = document.createElement('div');
+				details.className = 'cart-item-details';
+				let detailsHtml = `<div style="font-weight:700">${item.name}</div>`;
+				if (isUnserviceableCart) {
+					detailsHtml += '<div style="color:#666;margin-top:6px;">Price hidden for unserviceable location</div>';
+				} else {
+					detailsHtml += `<div style="color:#666;margin-top:6px;">₹${item.price} x ${item.qty} = ₹${(item.price || 0) * item.qty}</div>`;
+				}
+				if (isOutOfStock) {
+					detailsHtml += '<div style="color:#ef4444;font-weight:600;margin-top:4px;">Out of Stock</div>';
+				}
+				if (overQtyLimit) {
+					detailsHtml += `<div style="color:#ef4444;font-weight:600;margin-top:4px;">Reached more than quantity limit in your area remove product (Max: ${overQtyLimitById[item.id]})</div>`;
+				}
+				details.innerHTML = detailsHtml;
+
+				const controls = document.createElement('div');
+				controls.className = 'cart-item-controls';
+				const minus = document.createElement('button');
+				minus.textContent = '-';
+				minus.onclick = () => { updateQty(item.id, -1); renderCartPage(); };
+
+				const qty = document.createElement('div');
+				qty.textContent = item.qty;
+				qty.style.minWidth = '28px';
+				qty.style.textAlign = 'center';
+				qty.style.fontWeight = '600';
+
+				const plus = document.createElement('button');
+				plus.textContent = '+';
+				plus.onclick = () => { updateQty(item.id, 1); renderCartPage(); };
+
+				const remove = document.createElement('button');
+				remove.textContent = 'Remove';
+				remove.onclick = () => { updateQty(item.id, -item.qty); renderCartPage(); };
+
+				if (isOutOfStock) {
+					minus.disabled = true;
+					plus.disabled = true;
+					minus.style.opacity = '0.5';
+					plus.style.opacity = '0.5';
+				}
+				if (overQtyLimit) {
+					plus.disabled = true;
+					plus.style.opacity = '0.5';
+				}
+
+				controls.appendChild(minus);
+				controls.appendChild(qty);
+				controls.appendChild(plus);
+				controls.appendChild(remove);
+
+				row.appendChild(img);
+				row.appendChild(details);
+				row.appendChild(controls);
+				listEl.appendChild(row);
+
+			});
+
+			const promoObj = JSON.parse(sessionStorage.getItem('grozo_promo_b2b') || 'null');
+			const totals = calculateB2BCartTotals(cart, promoObj);
+
+			if (isUnserviceableCart) {
+				if (subtotalEl) subtotalEl.textContent = '--';
+				if (deliveryEl) deliveryEl.textContent = '--';
+				if (handlingEl) handlingEl.textContent = '--';
+				if (platformEl) platformEl.textContent = '--';
+				if (discountEl) discountEl.textContent = '--';
+				if (discountRow) discountRow.style.display = 'flex';
+				if (finalEl) finalEl.textContent = '--';
+				if (savedEl) savedEl.textContent = '--';
+			} else {
+				if (subtotalEl) subtotalEl.textContent = `₹${totals.subtotal}`;
+				if (deliveryEl) deliveryEl.textContent = `₹${Math.round(totals.delivery)}`;
+				if (handlingEl) handlingEl.textContent = `₹${Math.round(totals.handling)}`;
+				if (platformEl) platformEl.textContent = `₹${Math.round(totals.platform)}`;
+				if (discountEl) discountEl.textContent = `-₹${Math.round(totals.discount)}`;
+				if (discountRow) discountRow.style.display = totals.discount > 0 ? 'flex' : 'none';
+				if (finalEl) finalEl.textContent = `₹${Math.round(totals.final)}`;
+				if (savedEl) savedEl.textContent = `₹${Math.round(totals.saved)}`;
+			}
+			if (promoMsg) {
+				if (!isUnserviceableCart && promoObj && promoObj.code) {
+					promoMsg.innerHTML = 'Promo applied: <strong>' + promoObj.code + '</strong> <button onclick="removeB2BPromoCode()" style="margin-left:8px; padding:4px 8px; border-radius:6px; border:1px solid #e5e7eb; background:#fff; cursor:pointer;">Remove</button>';
+				} else {
+					promoMsg.innerText = '';
+				}
+			}
+
+			if (placeBtn) {
+				if (isUnserviceableCart) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Cart is unserviceable';
+				} else if (overQtyLimitItems.length) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Reached more than quantity limit in your area remove product';
+				} else if (hasOutOfStockItems) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Remove Out-of-Stock Items to Proceed';
+				} else {
+					placeBtn.disabled = false;
+					placeBtn.textContent = 'Place Order';
+				}
+			}
+
+			if (slotLabel) {
+				const selectedSlot = getSavedB2BDeliverySlot();
+				slotLabel.textContent = selectedSlot ? (`- ${selectedSlot.dayLabel ? selectedSlot.dayLabel + ' (' + selectedSlot.dateLabel + ') - ' : ''}${selectedSlot.slot}`) : '- Not selected';
+			}
+			const hasSelectedSlot = !!getSavedB2BDeliverySlot();
+
+			renderB2BLocationChecklist();
+
+			if (placeBtn && !isUnserviceableCart) {
+				if (overQtyLimitItems.length) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Reached more than quantity limit in your area remove product';
+				} else if (hasOutOfStockItems) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Remove Out-of-Stock Items to Proceed';
+				} else if (!hasSelectedSlot) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'select delivery time to proceed';
+				} else if (!isLocationConfirmed) {
+					placeBtn.disabled = true;
+					placeBtn.textContent = 'Confirm location to proceed';
+				}
+			}
+		}
+
+		function applyB2BPromoCode() {
+			const code = (document.getElementById('cartPromoInputB2B')?.value || '').trim().toUpperCase();
+			if (!code) return alert('Enter a promo code');
+
+			const promos = getAvailableB2BPromos();
+			const promo = promos.find((p) => String(p.code || '').toUpperCase() === code);
+			if (!promo) return alert('Invalid or unsupported promo code');
+
+			const cart = getCart();
+			const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
+			if (promo.min && subtotal < Number(promo.min || 0)) return alert(promo.code + ' requires subtotal >= ₹' + promo.min);
+
+			sessionStorage.setItem('grozo_promo_b2b', JSON.stringify({ ...promo }));
+			renderCartPage();
+		}
+
+		function removeB2BPromoCode() {
+			sessionStorage.removeItem('grozo_promo_b2b');
+			renderCartPage();
+		}
+
+		function clearB2BPromoOnLocationChange() {
+			sessionStorage.removeItem('grozo_promo_b2b');
+			const promoInput = document.getElementById('cartPromoInputB2B');
+			if (promoInput) promoInput.value = '';
+			const promoMsg = document.getElementById('promoMessageB2B');
+			if (promoMsg) promoMsg.innerText = '';
+		}
+
+		function getB2BLocationAddressString(location) {
+			if (!location || !location.address) return '';
+			return `${location.flatNo ? `${location.flatNo}, ` : ''}${location.area ? `${location.area}, ` : ''}${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.pincode || ''}`.trim();
+		}
+
+		function getStoredB2BLocation() {
+			try {
+				return JSON.parse(localStorage.getItem('grozo_location_b2b') || 'null');
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function isB2BLocationConfirmed() {
+			const location = getStoredB2BLocation();
+			const address = getB2BLocationAddressString(location);
+			if (!address) return false;
+			return sessionStorage.getItem('grozo_confirmed_location_b2b') === address;
+		}
+
+		function toggleB2BLocationConfirmation(checked) {
+			const location = getStoredB2BLocation();
+			const address = getB2BLocationAddressString(location);
+			if (!address) {
+				sessionStorage.removeItem('grozo_confirmed_location_b2b');
+				renderCartPage();
+				return;
+			}
+			if (checked) sessionStorage.setItem('grozo_confirmed_location_b2b', address);
+			else sessionStorage.removeItem('grozo_confirmed_location_b2b');
+			renderCartPage();
+		}
+
+		function openB2BLocationChangeFromChecklist() {
+			closeCartPage();
+			selectLocation();
+		}
+
+		function renderB2BLocationChecklist() {
+			const addressEl = document.getElementById('locationChecklistAddressB2B');
+			const checkbox = document.getElementById('locationConfirmCheckboxB2B');
+			if (!addressEl || !checkbox) return;
+
+			const location = getStoredB2BLocation();
+			const address = getB2BLocationAddressString(location);
+			addressEl.textContent = address || 'No location selected';
+			checkbox.checked = isB2BLocationConfirmed();
+			checkbox.disabled = !address;
+		}
+
+		function openB2BPromoCodesPanel() {
+			const panel = document.getElementById('promoCodesPanelB2B');
+			if (!panel) return;
+			panel.style.display = 'flex';
+			renderB2BPromoCodesList();
+		}
+
+		function closeB2BPromoCodesPanel(event) {
+			if (event && event.target && event.target !== document.getElementById('promoCodesPanelB2B')) return;
+			const panel = document.getElementById('promoCodesPanelB2B');
+			if (panel) panel.style.display = 'none';
+		}
+
+		function useB2BPromoCode(code) {
+			const input = document.getElementById('cartPromoInputB2B');
+			if (input) input.value = code;
+			closeB2BPromoCodesPanel();
+			applyB2BPromoCode();
+		}
+
+		function applyB2BMobileNumber() {
+			const mobileInput = document.getElementById('mobileNumberInputB2B');
+			const mobileError = document.getElementById('mobileErrorB2B');
+			if (!mobileInput || !mobileError) return;
+
+			const mobileNumber = String(mobileInput.value || '').trim();
+			mobileError.style.color = '#ef4444';
+			mobileError.innerText = '';
+
+			if (!mobileNumber) {
+				mobileError.innerText = 'Please enter your mobile number.';
+				mobileInput.focus();
+				return;
+			}
+
+			if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+				mobileError.innerText = 'Please enter a valid 10-digit mobile number.';
+				mobileInput.focus();
+				return;
+			}
+
+			const user = JSON.parse(localStorage.getItem('grozo_user') || '{}');
+			const payload = {
+				userPhone: user.phone || '',
+				receiverPhone: '+91' + mobileNumber
+			};
+
+			sessionStorage.setItem('grozo_receiver_phone_b2b', payload.receiverPhone);
+
+			fetch('https://grozo-backend.onrender.com/api/receiver-mobile', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			})
+			.then((response) => {
+				if (!response.ok) console.warn('Failed to send receiver mobile number to backend:', response.status);
+				return response.json();
+			})
+			.then((data) => {
+				console.log('Receiver mobile number sent successfully:', data);
+			})
+			.catch((error) => {
+				console.error('Error sending receiver mobile number:', error);
+			});
+
+			mobileError.style.color = '#16a34a';
+			mobileError.innerText = 'Mobile number saved successfully!';
+			setTimeout(() => {
+				mobileError.innerText = '';
+			}, 3000);
+		}
+
+		function formatSlotDate(dateObj) {
+			return dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+		}
+
+		function getB2BDeliveryDays() {
+			const labels = ['Today', 'Tomorrow'];
+			const now = new Date();
+			const days = [];
+			for (let i = 0; i < 4; i++) {
+				const d = new Date(now);
+				d.setDate(now.getDate() + i);
+				days.push({
+					key: d.toISOString().slice(0, 10),
+					label: labels[i] || d.toLocaleDateString('en-IN', { weekday: 'long' }),
+					dateLabel: `${formatSlotDate(d)}, ${d.toLocaleDateString('en-IN', { weekday: 'short' })}`
+				});
+			}
+			return days;
+		}
+
+		function getB2BDeliverySlotGroups() {
+			return [
+				{ period: 'Morning', slots: [
+					{ label: '6:00am - 8:00am', startMinutes: 6 * 60 },
+					{ label: '8:00am to 10:00am', startMinutes: 8 * 60 },
+					{ label: '10:00am to 11:59am', startMinutes: 10 * 60 }
+				] },
+				{ period: 'After Noon', slots: [
+					{ label: '12:00pm to 2:00pm', startMinutes: 12 * 60 },
+					{ label: '2:00pm to 5:00pm', startMinutes: 14 * 60 }
+				] },
+				{ period: 'Evening', slots: [
+					{ label: '5:00pm to 7:00pm', startMinutes: 17 * 60 },
+					{ label: '7:00pm to 9:00pm', startMinutes: 19 * 60 },
+					{ label: '9:00pm to 11:00pm', startMinutes: 21 * 60 }
+				] }
+			];
+		}
+
+		function getB2BLeadTimeCutoff() {
+			return new Date(Date.now() + (12 * 60 * 60 * 1000));
+		}
+
+		function isB2BSlotAvailable(dayKey, startMinutes) {
+			const cutoff = getB2BLeadTimeCutoff();
+			const slotStart = new Date(`${dayKey}T00:00:00`);
+			slotStart.setMinutes(startMinutes);
+			return slotStart.getTime() >= cutoff.getTime();
+		}
+
+		function getSavedB2BDeliverySlot() {
+			const raw = sessionStorage.getItem('grozo_delivery_slot_b2b') || '';
+			if (!raw) return null;
+			try {
+				const parsed = JSON.parse(raw);
+				if (parsed && parsed.slot && parsed.dayLabel && parsed.dateLabel) return parsed;
+			} catch (e) {}
+			return { slot: raw, dayLabel: '', dateLabel: '', period: '' };
+		}
+
+		function chooseB2BDeliverySlot() {
+			const backdrop = document.getElementById('deliverySlotModalBackdropB2B');
+			const root = document.getElementById('deliverySlotDaysB2B');
+			if (!backdrop || !root) return;
+
+			const saved = getSavedB2BDeliverySlot();
+			const groups = getB2BDeliverySlotGroups();
+			const days = getB2BDeliveryDays();
+
+			const dayCards = days.map((day) => {
+				const groupsHtml = groups.map((g) => {
+					const availableSlots = g.slots.filter((slotObj) => isB2BSlotAvailable(day.key, slotObj.startMinutes));
+					if (!availableSlots.length) return '';
+					const slotsHtml = availableSlots.map((slotObj) => {
+						const slotLabel = slotObj.label;
+						const selected = !!saved && saved.slot === slotLabel && saved.dateLabel === day.dateLabel;
+						const payload = JSON.stringify({ slot: slotLabel, period: g.period, dayLabel: day.label, dateLabel: day.dateLabel });
+						return `<button class="delivery-slot-option ${selected ? 'selected' : ''}" type="button" onclick='selectB2BDeliverySlot(${JSON.stringify(payload)})'>${slotLabel}</button>`;
+					}).join('');
+					return `<div><div class="delivery-period-label">${g.period}</div>${slotsHtml}</div>`;
+				}).join('');
+
+				if (!groupsHtml.trim()) return '';
+				return `<div class="delivery-day-card"><div class="delivery-day-title">${day.label}</div><div class="delivery-day-subtitle">${day.dateLabel}</div>${groupsHtml}</div>`;
+			}).filter(Boolean);
+
+			if (!dayCards.length) {
+				root.innerHTML = '<div class="account-item">No delivery slots available for the next 4 days with a 12-hour lead time.</div>';
+			} else {
+				root.innerHTML = dayCards.join('');
+			}
+
+			backdrop.classList.add('active');
+		}
+
+		function closeB2BDeliverySlotModal(event) {
+			if (event && event.target && event.target !== document.getElementById('deliverySlotModalBackdropB2B')) return;
+			const backdrop = document.getElementById('deliverySlotModalBackdropB2B');
+			if (backdrop) backdrop.classList.remove('active');
+		}
+
+		function selectB2BDeliverySlot(payloadJson) {
+			let slotObj = null;
+			try { slotObj = JSON.parse(payloadJson); } catch (err) { slotObj = null; }
+			if (!slotObj || !slotObj.slot) return;
+
+			sessionStorage.setItem('grozo_delivery_slot_b2b', JSON.stringify(slotObj));
+			closeB2BDeliverySlotModal();
+			renderCartPage();
+		}
+
+		function renderB2BPromoCodesList() {
+			const listEl = document.getElementById('promoCodesListB2B');
+			if (!listEl) return;
+
+			const promos = getAvailableB2BPromos();
+			if (!promos.length) {
+				listEl.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No promo codes available at this moment</div>';
+				return;
+			}
+
+			listEl.innerHTML = '';
+			promos.forEach((promo) => {
+				let details = '';
+				if (promo.min > 0) details += `Min. order: ₹${promo.min}`;
+				if (promo.cap > 0) details += (details ? ' • ' : '') + `Max. discount: ₹${promo.cap}`;
+
+				const item = document.createElement('div');
+				item.style.border = '1px solid #f1f5f9';
+				item.style.padding = '12px';
+				item.style.borderRadius = '8px';
+				item.style.background = '#fafafa';
+				item.innerHTML = `
+					<div style="font-weight:700; font-size:16px; color:#111; margin-bottom:4px;">${promo.code || ''}</div>
+					<div style="font-size:13px; color:#666; margin-bottom:8px;">${promo.desc || ''}</div>
+					<div style="font-size:12px; color:#888; margin-bottom:8px;">${details}</div>
+					<button style="padding:6px 12px; background:#22c55e; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; width:100%;" onclick="useB2BPromoCode('${String(promo.code || '').replace(/'/g, "\\'")}')">Use Code</button>
+				`;
+				listEl.appendChild(item);
+			});
+		}
+
+		function addB2BProductToCart(productId) {
+			const itemObj = b2bProducts.find((item) => item.id === productId);
+			if (!itemObj) return;
+			if (itemObj.outOfStock === true) {
+				alert('Item is out of stock');
+				return;
+			}
+			const qtyLimit = getB2BQtyLimit(productId);
+			const qty = b2bQtyState[productId] || 1;
+			const cart = getCart();
+			const existing = cart.find((item) => item.id === productId);
+			const existingQty = existing ? Number(existing.qty) || 0 : 0;
+
+			if (qtyLimit && existingQty >= qtyLimit) {
+				alert(`You already reached max quantity (${qtyLimit}) for this product.`);
+				return;
+			}
+
+			if (qtyLimit && (existingQty + qty) > qtyLimit) {
+				const allowedQty = qtyLimit - existingQty;
+				if (allowedQty <= 0) {
+					alert(`You already reached max quantity (${qtyLimit}) for this product.`);
+					return;
+				}
+				alert(`Only ${allowedQty} more can be added. Max qty is ${qtyLimit}.`);
+				b2bQtyState[productId] = allowedQty;
+				const qtyNumberEl = document.getElementById(`qtyNumber-${productId}`);
+				if (qtyNumberEl) qtyNumberEl.textContent = String(allowedQty);
+				return;
+			}
+
+			addToCart({
+				id: itemObj.id,
+				name: itemObj.name,
+				price: itemObj.discountedPrice,
+				image: itemObj.image,
+				unit: itemObj.unit
+			}, qty);
+
+			alert(itemObj.name + ' added to cart (Qty: ' + qty + ')');
+
+			b2bQtyState[productId] = 1;
+			const qtyNumber = document.getElementById(`qtyNumber-${productId}`);
+			const addSection = document.getElementById(`addSection-${productId}`);
+			const qtySection = document.getElementById(`qtySection-${productId}`);
+			if (qtyNumber) qtyNumber.textContent = '1';
+			if (qtySection) qtySection.style.display = 'none';
+			if (addSection) addSection.style.display = 'block';
+		}
+
+		async function placeB2BOrder() {
+			if (document.body.classList.contains('unserviceable-mode')) {
+				alert('Cart is unserviceable for this location.');
+				return;
+			}
+
+			const user = getStoredUser();
+			const isLoggedIn = user && (user.phone || user.email || user.picture);
+			if (!isLoggedIn) {
+				alert('You must be logged in to place a B2B order.');
+				closeCartPage();
+				openLoginModal();
+				return;
+			}
+
+			const cart = getCart();
+			if (!Array.isArray(cart) || !cart.length) {
+				alert('Your B2B cart is empty');
+				return;
+			}
+
+			const overQtyLimitItems = getB2BOverQtyLimitCartItems(cart);
+			if (overQtyLimitItems.length) {
+				alert('Reached more than quantity limit in your area remove product');
+				renderCartPage();
+				return;
+			}
+
+			const hasOutOfStockItems = cart.some((item) => {
+				const product = b2bProducts.find((p) => p.id === item.id);
+				return !!(product && product.outOfStock === true);
+			});
+			if (hasOutOfStockItems) {
+				alert('Remove out-of-stock items from cart to proceed.');
+				renderCartPage();
+				return;
+			}
+
+			syncB2BLocationTextFromStorage();
+
+			const location = JSON.parse(localStorage.getItem('grozo_location_b2b') || 'null');
+			const locationText = document.getElementById('locationText');
+			const isLocationVisibleSelected = !!locationText && String(locationText.textContent || '').trim() !== 'Select location ▼';
+			if (!location || !location.address || !isLocationVisibleSelected) {
+				alert('Please enter your delivery address to place order.\n\nClick on "Select location ▼" at the top to add your location.');
+				closeCartPage();
+				selectLocation();
+				return;
+			}
+
+			if (!isB2BLocationConfirmed()) {
+				alert('Please confirm delivery location in checklist before placing order.');
+				renderCartPage();
+				return;
+			}
+
+			const placeBtn = document.getElementById('placeB2BOrderBtn');
+			if (placeBtn) {
+				placeBtn.disabled = true;
+				placeBtn.textContent = 'Placing...';
+			}
+
+			const promoObj = JSON.parse(sessionStorage.getItem('grozo_promo_b2b') || 'null');
+			const totals = calculateB2BCartTotals(cart, promoObj);
+			const receiverPhone = sessionStorage.getItem('grozo_receiver_phone_b2b') || '';
+			const selectedDeliverySlot = getSavedB2BDeliverySlot();
+			const deliveryTimeSlot = selectedDeliverySlot ? `${selectedDeliverySlot.dayLabel ? selectedDeliverySlot.dayLabel + ' (' + selectedDeliverySlot.dateLabel + ') - ' : ''}${selectedDeliverySlot.slot}` : '';
+			const nearestStore = await syncNearestStoreForLocation(location, { persistLocation: false });
+			const activeDarkStore = nearestStore || currentDarkStore || null;
+			const darkStoreMeta = activeDarkStore
+				? {
+					darkStoreId: activeDarkStore.id || '',
+					darkStoreName: activeDarkStore.name || '',
+					darkStore: {
+						id: activeDarkStore.id || '',
+						name: activeDarkStore.name || '',
+						address: activeDarkStore.address || '',
+						latitude: activeDarkStore.latitude || null,
+						longitude: activeDarkStore.longitude || null
+					}
+				}
+				: { darkStoreId: '', darkStoreName: '', darkStore: null };
+
+			const payload = {
+				items: cart,
+				userName: user.name || 'Grozo User',
+				userPhone: user.phone || '',
+				userEmail: user.email || '',
+				receiverPhone,
+				location,
+				subtotal: totals.subtotal,
+				fees: {
+					delivery: Math.round(totals.delivery),
+					handling: Math.round(totals.handling),
+					platform: Math.round(totals.platform)
+				},
+				discount: Math.round(totals.discount),
+				total: Math.round(totals.final),
+				paymentMethod: 'Cash / UPI on delivery',
+				deliveryTimeSlot,
+				orderMode: 'b2b',
+				orderType: 'b2b',
+				channel: 'b2b',
+				businessType: 'B2B',
+				...darkStoreMeta
+			};
+
+			try {
+				const resp = await fetch('https://grozo-backend.onrender.com/api/orders', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				if (!resp.ok) throw new Error('Server error: ' + resp.status);
+				const data = await resp.json();
+				applyB2BStockUpdatesFromServer(data.stockUpdates);
+				if (!Array.isArray(data.stockUpdates) || data.stockUpdates.length === 0) {
+					applyB2BStockDecrementFromItems(cart);
+				}
+				const order = {
+					...(data.order || {}),
+					userPhone: (data.order && data.order.userPhone) || user.phone || '',
+					receiverPhone: (data.order && data.order.receiverPhone) || receiverPhone || '',
+					subtotal: Number((data.order && data.order.subtotal) ?? totals.subtotal ?? 0),
+					fees: {
+						delivery: Number((data.order && data.order.fees && data.order.fees.delivery) ?? Math.round(totals.delivery) ?? 0),
+						handling: Number((data.order && data.order.fees && data.order.fees.handling) ?? Math.round(totals.handling) ?? 0),
+						platform: Number((data.order && data.order.fees && data.order.fees.platform) ?? Math.round(totals.platform) ?? 0)
+					},
+					discount: Number((data.order && data.order.discount) ?? Math.round(totals.discount) ?? 0),
+					total: Number((data.order && data.order.total) ?? Math.round(totals.final) ?? 0)
+				};
+				const orders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+				orders.push(order);
+				localStorage.setItem('grozo_orders', JSON.stringify(orders));
+				saveCart([]);
+				sessionStorage.removeItem('grozo_promo_b2b');
+				updateCartBadge();
+				renderCartPage();
+				closeCartPage();
+				notifyConsumer(order.id, 'placed', "🎉 Thanks for shopping with Grozo! Your order is placed. We'll deliver freshness in minutes ⚡");
+				alert('B2B order placed successfully! Order id: ' + order.id);
+				try { loadAccountPanel(); } catch (e) {}
+			} catch (err) {
+				console.warn('B2B order API failed, saving locally', err);
+				applyB2BStockDecrementFromItems(cart);
+				const orders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+				const order = {
+					id: 'b2b_' + Date.now(),
+					date: new Date().toLocaleString(),
+					items: cart,
+					subtotal: totals.subtotal,
+					fees: {
+						delivery: Math.round(totals.delivery),
+						handling: Math.round(totals.handling),
+						platform: Math.round(totals.platform)
+					},
+					discount: Math.round(totals.discount),
+					total: Math.round(totals.final),
+					userPhone: user.phone || '',
+					receiverPhone: receiverPhone || '',
+					userEmail: user.email || '',
+					userName: user.name || 'Grozo User',
+					location,
+					paymentMethod: 'Cash / UPI on delivery',
+					deliveryTimeSlot,
+					orderMode: 'b2b',
+					orderType: 'b2b',
+					channel: 'b2b',
+					businessType: 'B2B',
+					darkStoreId: darkStoreMeta.darkStoreId,
+					darkStoreName: darkStoreMeta.darkStoreName,
+					darkStore: darkStoreMeta.darkStore,
+					status: 'pending',
+					dispatch: null
+				};
+				orders.push(order);
+				localStorage.setItem('grozo_orders', JSON.stringify(orders));
+				saveCart([]);
+				sessionStorage.removeItem('grozo_promo_b2b');
+				updateCartBadge();
+				renderCartPage();
+				closeCartPage();
+				notifyConsumer(order.id, 'placed', "🎉 Thanks for shopping with Grozo! Your order is placed. We'll deliver freshness in minutes ⚡");
+				alert('B2B order placed successfully! Order id: ' + order.id);
+				try { loadAccountPanel(); } catch (e) {}
+			} finally {
+				if (placeBtn) {
+					placeBtn.disabled = false;
+					placeBtn.textContent = 'Place Order';
+				}
+			}
+		}
+
+		function toggleNotifications() {
+			const panel = document.getElementById('notificationsPanel');
+			if (!panel) return;
+
+			if (panel.classList.contains('active')) {
+				closeNotifications();
+				return;
+			}
+
+			clearOldNotifications();
+			panel.classList.add('active');
+			panel.style.display = 'flex';
+			renderNotifications();
+		}
+
+		function closeNotifications() {
+			const panel = document.getElementById('notificationsPanel');
+			if (!panel) return;
+			panel.classList.remove('active');
+			panel.style.display = 'none';
+		}
+
+		function openNotification(index) {
+			try {
+				const userIdentifier = getNotificationUserIdentifier();
+				if (!userIdentifier) return;
+
+				const notifications = JSON.parse(localStorage.getItem('grozo_notifications') || '{}');
+				const userNotifications = notifications[userIdentifier] || [];
+				const notif = userNotifications[index];
+				if (!notif || getNotificationContext(notif) !== 'b2b') return;
+				if (!notif) return;
+
+				userNotifications[index].read = true;
+				notifications[userIdentifier] = userNotifications;
+				localStorage.setItem('grozo_notifications', JSON.stringify(notifications));
+				updateNotificationBadge();
+				renderNotifications();
+				alert(notif.message + '\n\nTime: ' + notif.timestamp);
+			} catch (err) {
+				console.warn('Open notification error:', err);
+			}
+		}
+
+		function renderNotifications() {
+			try {
+				const container = document.getElementById('notificationsList');
+				if (!container) return;
+
+				const userIdentifier = getNotificationUserIdentifier();
+				if (!userIdentifier) {
+					container.innerHTML = `
+						<div style="padding: 20px; text-align: center; color: #999;">
+							<div style="font-size: 40px; margin-bottom: 10px;">👤</div>
+							<p style="margin: 0; font-size: 13px;">Please log in to see notifications</p>
+						</div>
+					`;
+					return;
+				}
+
+				const notifications = JSON.parse(localStorage.getItem('grozo_notifications') || '{}');
+				const userNotifications = notifications[userIdentifier] || [];
+				const contextNotifs = userNotifications
+					.map((notif, idx) => ({ notif, idx }))
+					.filter((item) => getNotificationContext(item.notif) === 'b2b');
+				if (!contextNotifs.length) {
+					container.innerHTML = `
+						<div style="padding: 20px; text-align: center; color: #6b7280;">
+							<div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+							<p style="margin: 0; font-size: 14px; font-weight: 500; color: #111;">No notifications found</p>
+							<p style="margin: 8px 0 0; font-size: 12px; color: #9ca3af;">Check back when your order status updates</p>
+						</div>
+					`;
+					return;
+				}
+
+				const unreadNotifs = [];
+				const readNotifs = [];
+				contextNotifs.forEach((item) => {
+					if (item.notif.read) readNotifs.push(item);
+					else unreadNotifs.push(item);
+				});
+
+				let html = '';
+				if (unreadNotifs.length) {
+					html += `<div style="padding:10px 12px; font-weight:700; color:#22c55e; font-size:13px;">New</div>`;
+					unreadNotifs.reverse().forEach((item) => {
+						const icon = iconMap[item.notif.type] || '📢';
+						html += `
+							<div class="notification-item" style="padding:12px;display:flex;gap:8px;border-bottom:1px solid #f3f4f6;cursor:pointer;background:#f0fdf4;" onclick="openNotification(${item.idx})">
+								<span style="font-size:16px;flex-shrink:0;">${icon}</span>
+								<div style="flex:1;min-width:0;">
+									<p style="margin:0;font-size:13px;color:#111;font-weight:500;">${item.notif.message}</p>
+									<small style="color:#666;display:block;margin-top:6px;">${item.notif.timestamp}</small>
+								</div>
+							</div>
+						`;
+					});
+				}
+
+				if (readNotifs.length) {
+					html += `<div style="padding:10px 12px; font-weight:700; color:#6b7280; font-size:13px; margin-top:${unreadNotifs.length ? '6px' : '0'};">Past</div>`;
+					readNotifs.reverse().forEach((item) => {
+						const icon = iconMap[item.notif.type] || '📢';
+						html += `
+							<div class="notification-item" style="padding:12px;display:flex;gap:8px;border-bottom:1px solid #f3f4f6;cursor:pointer;opacity:0.7;" onclick="openNotification(${item.idx})">
+								<span style="font-size:16px;flex-shrink:0;color:#9ca3af">${icon}</span>
+								<div style="flex:1;min-width:0;">
+									<p style="margin:0;font-size:13px;color:#6b7280;">${item.notif.message}</p>
+									<small style="color:#9ca3af;display:block;margin-top:6px;">${item.notif.timestamp}</small>
+								</div>
+							</div>
+						`;
+					});
+				}
+
+				container.innerHTML = html;
+			} catch (err) {
+				console.warn('Render notifications error:', err);
+			}
+		}
+
+		function getB2BStatusNotificationType(status) {
+			if (status === 'cancelled') return 'cancelled';
+			if (status === 'delivered') return 'delivered';
+			if (status === 'on_the_way' || status === 'picked_up') return 'on_the_way';
+			if (status === 'dispatched' || status === 'assigned') return 'dispatched';
+			return 'placed';
+		}
+
+		function buildB2BStatusNotificationMessage(order, status) {
+			const orderId = order && order.id ? order.id : '';
+			if (status === 'cancelled') return `Order #${orderId} has been cancelled. If this is unexpected, contact Grozo support.`;
+			if (status === 'delivered') return `Order #${orderId} has been delivered. Thank you for choosing Grozo.`;
+			if (status === 'on_the_way' || status === 'picked_up') return `Order #${orderId} is on the way. Please keep your phone available.`;
+			if (status === 'dispatched' || status === 'assigned') return `Order #${orderId} has been dispatched and assigned to a delivery partner.`;
+			return "🎉 Thanks for shopping with Grozo! Your order is placed. We'll deliver freshness in minutes ⚡";
+		}
+
+		function isB2BOrder(order) {
+			const mode = (order.orderMode || order.orderType || order.channel || '').toLowerCase();
+			const businessType = (order.businessType || '').toLowerCase();
+			return mode === 'b2b' || businessType === 'b2b' || String(order.id || '').startsWith('b2b_');
+		}
+
+		function syncB2BOrderStatusNotifications(orders) {
+			const userIdentifier = getNotificationUserIdentifier();
+			if (!userIdentifier || !Array.isArray(orders)) return;
+
+			let tracker = {};
+			try {
+				tracker = JSON.parse(localStorage.getItem('grozo_b2b_notified_status') || '{}');
+			} catch (err) {
+				tracker = {};
+			}
+
+			if (!tracker[userIdentifier]) tracker[userIdentifier] = {};
+			let trackerUpdated = false;
+
+			orders.forEach((order) => {
+				if (!order || !order.id || !isB2BOrder(order)) return;
+				const status = String(order.status || 'pending').toLowerCase();
+				const prevStatus = tracker[userIdentifier][order.id];
+				if (!prevStatus) {
+					tracker[userIdentifier][order.id] = status;
+					trackerUpdated = true;
+					return;
+				}
+
+				if (prevStatus !== status) {
+					notifyConsumer(order.id, getB2BStatusNotificationType(status), buildB2BStatusNotificationMessage(order, status));
+					tracker[userIdentifier][order.id] = status;
+					trackerUpdated = true;
+				}
+			});
+
+			if (trackerUpdated) {
+				localStorage.setItem('grozo_b2b_notified_status', JSON.stringify(tracker));
+			}
+		}
+
+		async function refreshB2BStatusNotifications() {
+			const user = getStoredUser();
+			if (!user || !user.phone) return;
+
+			try {
+				const response = await fetch('https://grozo-backend.onrender.com/api/orders/user/' + encodeURIComponent(user.phone));
+				if (!response.ok) throw new Error('Unable to fetch from backend');
+				const data = await response.json();
+				syncB2BOrderStatusNotifications(Array.isArray(data.orders) ? data.orders : []);
+			} catch (error) {
+				const localOrders = JSON.parse(localStorage.getItem('grozo_orders') || '[]');
+				const userOrders = localOrders.filter((order) => order.userPhone === user.phone);
+				syncB2BOrderStatusNotifications(userOrders);
+			}
+		}
+
+		function renderSuggestions(filteredProducts) {
+			const suggestions = document.getElementById('searchSuggestions');
+			if (!suggestions) return;
+
+			if (!filteredProducts.length) {
+				suggestions.classList.remove('active');
+				suggestions.innerHTML = '';
+				return;
+			}
+
+			suggestions.innerHTML = filteredProducts.map((product) => {
+				const isOutOfStock = product.outOfStock === true;
+				const unit = (typeof product.unit === 'string' && product.unit.trim()) ? product.unit : '/ set';
+				return `
+					<div class="suggestion-item" ${isOutOfStock ? 'style="opacity:0.65;"' : `onclick="selectSuggestion('${product.id}')"`}>
+						<img src="${product.image}" alt="${product.name}" />
+						<div>
+							<div class="suggestion-item-name">${product.name}</div>
+							<div class="suggestion-item-price">${isOutOfStock ? 'Out of stock' : `₹${product.discountedPrice}${unit}`}</div>
+						</div>
+					</div>
+				`;
+			}).join('');
+
+			suggestions.classList.add('active');
+		}
+
+		function applySearch(queryText) {
+			const query = (queryText || '').trim().toLowerCase();
+			if (!query) {
+				renderSuggestions([]);
+				return;
+			}
+			const matches = b2bProducts
+				.filter(p => p.name.toLowerCase().includes(query))
+				.slice(0, 8);
+			renderSuggestions(matches);
+		}
+
+		function handleSearchInput() {
+			const input = document.getElementById('searchInput');
+			applySearch(input ? input.value : '');
+		}
+
+		function doSearch() {
+			const input = document.getElementById('searchInput');
+			applySearch(input ? input.value : '');
+		}
+
+		function selectSuggestion(productId) {
+			const suggestions = document.getElementById('searchSuggestions');
+			const input = document.getElementById('searchInput');
+			if (suggestions) suggestions.classList.remove('active');
+			if (input) input.value = '';
+			const selected = b2bProducts.find(p => p.id === productId);
+			if (selected) {
+				if (selected.outOfStock === true) {
+					alert(selected.name + ' is out of stock');
+					return;
+				}
+				const cards = document.querySelectorAll('#productsGrid .card');
+				for (const card of cards) {
+					if (card.dataset.name === selected.name.toLowerCase()) {
+						card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						card.style.outline = '3px solid #22c55e';
+						setTimeout(() => { card.style.outline = ''; }, 1500);
+						break;
+					}
+				}
+			}
+		}
+
+		document.addEventListener('click', (event) => {
+			const searchContainer = document.querySelector('.search-container');
+			const suggestions = document.getElementById('searchSuggestions');
+			if (!searchContainer || !suggestions) return;
+			if (!searchContainer.contains(event.target)) {
+				suggestions.classList.remove('active');
+			}
+
+			const panel = document.getElementById('notificationsPanel');
+			const trigger = event.target && event.target.closest ? event.target.closest('button[title="Notifications"]') : null;
+			if (panel && panel.classList.contains('active') && !panel.contains(event.target) && !trigger) {
+				closeNotifications();
+			}
+		});
+
+		function initRotatingBanners() {
+			const root = document.getElementById('rotatingBanners');
+			if (!root) return;
+			const track = document.getElementById('adBannerTrack');
+			const originalSlides = Array.from(track.querySelectorAll('.ad-banner-slide'));
+			const dotsContainer = document.getElementById('adDots');
+			const prevBtn = root.querySelector('.ad-banner-nav.prev');
+			const nextBtn = root.querySelector('.ad-banner-nav.next');
+			if (!track || !originalSlides.length || !dotsContainer) return;
+
+			const realSlideCount = originalSlides.length;
+			if (realSlideCount > 1) {
+				const firstClone = originalSlides[0].cloneNode(true);
+				const lastClone = originalSlides[realSlideCount - 1].cloneNode(true);
+				track.appendChild(firstClone);
+				track.insertBefore(lastClone, track.firstChild);
+			}
+
+			let currentIndex = realSlideCount > 1 ? 1 : 0;
+			let activeDotIndex = 0;
+			let timer = null;
+			let isAnimating = false;
+			const autoSlideDuration = '0.6s';
+			const manualSlideDuration = '0.1s';
+
+			function setTrackPosition(useTransition = true, duration = autoSlideDuration) {
+				track.style.transition = useTransition ? `transform ${duration} ease` : 'none';
+				track.style.transform = `translateX(-${currentIndex * 100}%)`;
+			}
+
+			function jumpWithoutAnimation(index) {
+				currentIndex = index;
+				track.style.transition = 'none';
+				track.style.transform = `translateX(-${currentIndex * 100}%)`;
+				void track.offsetWidth;
+			}
+
+			function renderDots() {
+				dotsContainer.innerHTML = Array.from({ length: realSlideCount }).map((_, index) => `
+					<button class="ad-dot ${index === currentIndex ? 'active' : ''}" onclick="goToSlide(${index})" aria-label="Go to slide ${index + 1}"></button>
+				`).join('');
+				const dots = dotsContainer.querySelectorAll('.ad-dot');
+				dots.forEach((dot, index) => dot.classList.toggle('active', index === activeDotIndex));
+			}
+
+			window.goToSlide = function goToSlide(index) {
+				if (isAnimating) return;
+				activeDotIndex = index;
+				currentIndex = realSlideCount > 1 ? index + 1 : index;
+				setTrackPosition(true, manualSlideDuration);
+				renderDots();
+			};
+
+			function moveBy(step, duration = autoSlideDuration) {
+				if (realSlideCount <= 1) return;
+				if (isAnimating) return;
+
+				isAnimating = true;
+				currentIndex += step;
+				activeDotIndex = (activeDotIndex + step + realSlideCount) % realSlideCount;
+				setTrackPosition(true, duration);
+				renderDots();
+			}
+
+			function nextSlide() {
+				moveBy(1, autoSlideDuration);
+			}
+
+			function prevSlide() {
+				moveBy(-1, manualSlideDuration);
+			}
+
+			track.addEventListener('transitionend', () => {
+				if (realSlideCount <= 1) return;
+				if (!isAnimating) return;
+
+				let jumped = false;
+				if (currentIndex === realSlideCount + 1) {
+					jumpWithoutAnimation(1);
+					jumped = true;
+				} else if (currentIndex === 0) {
+					jumpWithoutAnimation(realSlideCount);
+					jumped = true;
+				}
+
+				isAnimating = false;
+			});
+
+			if (prevBtn) {
+				prevBtn.addEventListener('click', () => {
+					prevSlide();
+					if (timer) clearInterval(timer);
+					timer = setInterval(() => {
+						if (!isAnimating) nextSlide();
+					}, 4000);
+				});
+			}
+
+			if (nextBtn) {
+				nextBtn.addEventListener('click', () => {
+					moveBy(1, manualSlideDuration);
+					if (timer) clearInterval(timer);
+					timer = setInterval(() => {
+						if (!isAnimating) nextSlide();
+					}, 4000);
+				});
+			}
+
+			setTrackPosition(false);
+			renderDots();
+			timer = setInterval(() => {
+				if (!isAnimating) nextSlide();
+			}, 4000);
+			window.addEventListener('beforeunload', () => {
+				if (timer) clearInterval(timer);
+			});
+		}
+
+		initRotatingBanners();
+		initProductTabs();
+		initializeDarkStore();
+		syncB2BLocationTextFromStorage();
+		try {
+			const storedLocation = JSON.parse(localStorage.getItem('grozo_location_b2b') || 'null');
+			if (storedLocation && storedLocation.address) {
+				syncNearestStoreForLocation(storedLocation, { persistLocation: false });
+			} else {
+				setB2BUnserviceableMode(false);
+			}
+		} catch (e) {
+			setB2BUnserviceableMode(false);
+		}
+		loadB2BProductDataByLocation();
+		refreshB2BCartPricesForCurrentLocation();
+		initGoogle();
+		renderProducts();
+		let b2bKnownLastUpdate = 0;
+		fetchB2BConfigFromBackend().then(() => {
+			loadB2BProductDataByLocation();
+			refreshB2BCartPricesForCurrentLocation();
+			renderProducts();
+			renderCartPage();
+		}).catch(() => {});
+		// Poll backend every 30s; if admin changed B2B data, silently reload products/prices/promos/fees
+		fetch('https://grozo-backend.onrender.com/api/last-update').then(r => r.json()).then(d => { b2bKnownLastUpdate = d.lastUpdate || 0; }).catch(() => {});
+		setInterval(() => {
+			fetch('https://grozo-backend.onrender.com/api/last-update')
+				.then(r => r.json())
+				.then(d => {
+					const ts = d.lastUpdate || 0;
+					if (ts && b2bKnownLastUpdate && ts > b2bKnownLastUpdate) {
+						b2bKnownLastUpdate = ts;
+						fetchB2BConfigFromBackend().then(() => {
+							loadB2BProductDataByLocation();
+							refreshB2BCartPricesForCurrentLocation();
+							renderProducts();
+							renderCartPage();
+						}).catch(() => {});
+					} else if (ts) {
+						b2bKnownLastUpdate = ts;
+					}
+				}).catch(() => {});
+		}, 30000);
+		updateCartBadge();
+		clearOldNotifications();
+		updateNotificationBadge();
+		refreshB2BStatusNotifications();
+		if (b2bNotificationStatusInterval) clearInterval(b2bNotificationStatusInterval);
+		b2bNotificationStatusInterval = setInterval(refreshB2BStatusNotifications, 30000);
+		refreshUserIcon();
+		const pincodeInput = document.getElementById('pincode');
+		if (pincodeInput) pincodeInput.addEventListener('blur', autoFillLocationByPincode);
+	</script>
+	<div id="recaptcha-container"></div>
+	<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+	<script>
+		const firebaseConfig = {
+			apiKey: 'AIzaSyC4tCcv0x13Vipghs-ilh7bJ0D5NkMm3BM',
+			authDomain: 'grozo-c3a56.firebaseapp.com',
+			projectId: 'grozo-c3a56',
+			storageBucket: 'grozo-c3a56.firebasestorage.app',
+			messagingSenderId: '828925397571',
+			appId: '1:828925397571:web:900944cbc22e1859dd62f6',
+			measurementId: 'G-8VZC9399LS'
+		};
+
+		if (!window.firebase) {
+			console.error('Firebase SDK not loaded');
+		} else {
+			if (!firebase.apps || firebase.apps.length === 0) {
+				firebase.initializeApp(firebaseConfig);
+			}
+
+			// 🔒 BULLETPROOF: Create reCAPTCHA ONLY ONCE, no matter how many times script runs
+			if (!window.recaptchaVerifier) {
+				try {
+					window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+						size: 'invisible'
+					});
+					window.recaptchaVerifier.render();
+					console.log('✓ reCAPTCHA initialized for B2B (created once, protected)');
+				} catch (err) {
+					console.warn('reCAPTCHA render error:', err.message);
+				}
+			} else {
+				console.log('✓ reCAPTCHA already exists (B2B), skipping creation');
+			}
+
+			firebase.auth().onAuthStateChanged(function (user) {
+				if (user) {
+					console.log('User already logged in:', user.phoneNumber);
+				}
+			});
+		}
+	</script>
+</body>
+</html>
